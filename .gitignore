@@ -1,0 +1,19 @@
+# General
+.DS_Store
+.Trashes
+
+# node_modules
+/node_modules
+
+# vs code
+.vscode
+.npm
+
+# Ensure git does not track environment variable files
+
+.env
+.env.*
+
+# project
+/css/styles.css.map
+.prepros
