@@ -9,7 +9,10 @@ export const Auth = () => {
     const [password, setPassword] = useState("")
 
     const signIn = async() => {
+        try{
         await createUserWithEmailAndPassword(auth, email, password)
+        }catch(err){
+            console.error(err)
     }
     return (
         <div>
