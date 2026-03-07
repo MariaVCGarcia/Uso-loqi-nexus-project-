@@ -11,7 +11,7 @@
 
 # Ensure git does not track environment variable files
 
-.env
+frontend/.env
 .env.*
 
 # project
