@@ -31,7 +31,7 @@ export const Auth = () => {
 }
 
 //Function Output to the user after registration. Function called in app.jsx for execution
-export default function App() {
+export default function Registration() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 

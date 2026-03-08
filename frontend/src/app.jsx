@@ -1,5 +1,3 @@
-import {App} from "./authentication/registration";
+import {Registration} from "./authentication/registration";
 
-
-
-App();
+Registration();
