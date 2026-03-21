@@ -1,23 +1,14 @@
-import { useState } from "react";
 import { auth } from "./firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+// console.log("ENV TEST:", process.env.REACT_APP_FIREBASE_API_KEY);
 
-export const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export const loginUser = (email, password) => {
+  return signInWithEmailAndPassword(auth, email, password);
+};
 
-  const signIn = async () => {
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-  return (
-    <div>
-      <input name="Email..." onChange={(e) => setEmail(e.target.value)} />
-      <input name="Password..." onChange={(e) => setPassword(e.target.value)} />
-      <button onClick={signIn}> Login</button>
-    </div>
-  );
+export const registerUser = (email, password) => {
+  return createUserWithEmailAndPassword(auth, email, password);
 };
