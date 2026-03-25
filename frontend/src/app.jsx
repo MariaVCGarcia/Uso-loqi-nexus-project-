@@ -14,7 +14,7 @@ import Navbar from "./components/nav/nav";
 import Home from "./pages/home/home";
 import Footer from "./components/footer/footer";
 import Registration from "./pages/register/registration";
-import Login from "./pages/register/login";
+import Login from "./pages/login/login";
 
 console.log("ENV TEST:", process.env.REACT_APP_FIREBASE_API_KEY);
 
@@ -37,7 +37,7 @@ function App() {
 
   return (
     <Router>
-      <Navbar />
+      <Navbar user={user}/>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route

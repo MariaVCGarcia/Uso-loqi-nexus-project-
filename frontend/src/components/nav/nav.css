@@ -50,3 +50,11 @@ nav {
 .btn-nav:hover {
   background: #a8521f !important;
 }
+.btn-nav-outline {
+  background: transparent !important;
+  color: var(--terracotta) !important;
+  border: 1.5px solid var(--terracotta);
+}
+.btn-nav-outline:hover {
+  background: rgba(196, 98, 45, 0.08) !important;
+}
