@@ -1,0 +1,148 @@
+.dashboard {
+  min-height: 100vh;
+  padding: 7rem 6% 4rem;
+  background: var(--light);
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 3.5rem;
+}
+
+.dashboard-eyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-title {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--ink);
+  line-height: 1.15;
+  margin-bottom: 0.75rem;
+}
+
+.dashboard-title em {
+  color: var(--terracotta);
+  font-style: italic;
+}
+
+.dashboard-sub {
+  font-size: 1rem;
+  color: rgba(26, 26, 46, 0.6);
+  max-width: 480px;
+  line-height: 1.6;
+}
+
+.dashboard-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #fff;
+  border: 1px solid rgba(26, 26, 46, 0.08);
+  border-radius: 50px;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
+}
+
+.dashboard-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--terracotta);
+  color: #fff;
+  font-family: "Playfair Display", serif;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-user span {
+  font-size: 0.85rem;
+  color: var(--ink);
+  opacity: 0.7;
+}
+
+.scenario-section {
+  background: var(--cream);
+  border-radius: 20px;
+  padding: 2.5rem;
+}
+
+.scenario-heading {
+  font-family: "Playfair Display", serif;
+  font-size: 1.5rem;
+  color: var(--ink);
+  margin-bottom: 1.5rem;
+}
+
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.scenario-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(26, 26, 46, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.scenario-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(26, 26, 46, 0.09);
+}
+
+.scenario-card h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.scenario-card p {
+  font-size: 0.85rem;
+  color: rgba(26, 26, 46, 0.55);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.btn-start {
+  margin-top: 0.75rem;
+  background: var(--terracotta);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 0.5rem 1.25rem;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.2s;
+}
+
+.btn-start:hover {
+  background: #a8521f;
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding-top: 6rem;
+  }
+  .scenario-section {
+    padding: 1.5rem;
+  }
+}

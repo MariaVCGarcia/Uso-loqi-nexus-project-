@@ -12,7 +12,7 @@ export default function Login() {
     e.preventDefault();
     try {
       await loginUser(email, password);
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       setMessage(err.message);
     }

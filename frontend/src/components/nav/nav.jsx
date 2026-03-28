@@ -9,6 +9,7 @@ export default function Navbar({ user }) {
   };
   const handleLogout = () => {
     signOut(auth);
+    navigate("/");
   };
 
   return (
@@ -18,15 +19,26 @@ export default function Navbar({ user }) {
       </a>
 
       <ul className="nav-links">
-        <li>
-          <a href="/#features">Features</a>
-        </li>
-        <li>
-          <a href="/#how">How it works</a>
-        </li>
-        <li>
-          <a href="/#levels">Levels</a>
-        </li>
+        {user && (
+          <li>
+            <a onClick={() => navigate("/dashboard")} style={{ cursor: "pointer" }}>Home</a>
+          </li>
+        )}
+        {!user && (
+          <li>
+            <a href="/#features">Features</a>
+          </li>
+        )}
+        {!user && (
+          <li>
+            <a href="/#how">How it works</a>
+          </li>
+        )}
+        {!user && (
+          <li>
+            <a href="/#levels">Levels</a>
+          </li>
+        )}
         {!user && (
           <li>
             <a onClick={handleGetStarted} className="btn-nav">
