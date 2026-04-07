@@ -16,6 +16,8 @@ import Footer from "./components/footer/footer";
 import Registration from "./pages/register/registration";
 import Login from "./pages/login/login";
 import Dashboard from "./pages/dashboard/dashboard";
+import Settings from "./pages/settings/settings";
+import Conversations from "./pages/conversations/conversations";
 
 console.log("ENV TEST:", process.env.REACT_APP_FIREBASE_API_KEY);
 
@@ -52,6 +54,14 @@ function App() {
         <Route
           path="/login"
           element={!user ? <Login /> : <Navigate to="/dashboard" />}
+        />
+        <Route
+            path="/settings"
+            element={user ? <Settings /> : <Navigate to="/login" />}
+        />
+        <Route
+            path="/conversations"
+            element={user ? <Conversations /> : <Navigate to="/login" />}
         />
       </Routes>
 

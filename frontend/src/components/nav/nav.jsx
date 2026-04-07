@@ -24,6 +24,16 @@ export default function Navbar({ user }) {
             <a onClick={() => navigate("/dashboard")} style={{ cursor: "pointer" }}>Home</a>
           </li>
         )}
+          {user && (
+              <li>
+                  <a onClick={() => navigate("/conversations")} style={{ cursor: "pointer" }}>Conversations</a>
+              </li>
+          )}
+          {user && (
+              <li>
+                  <a onClick={() => navigate("/settings")} style={{ cursor: "pointer" }}>Settings</a>
+              </li>
+          )}
         {!user && (
           <li>
             <a href="/#features">Features</a>
