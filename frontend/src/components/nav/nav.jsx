@@ -14,7 +14,7 @@ export default function Navbar({ user }) {
 
   return (
     <nav>
-      <a href="/" onClick={() => navigate("/")} className="nav-logo">
+      <a onClick={() => navigate(user ? "/dashboard" : "/")} className="nav-logo" style={{ cursor: "pointer" }}>
         Usu <span>Loqui</span>
       </a>
 
