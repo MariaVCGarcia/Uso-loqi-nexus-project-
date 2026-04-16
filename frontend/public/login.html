@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Usu Loqui — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #F5F0E8; --ink: #1A1A2E; --terracotta: #C4622D;
+      --gold: #D4A843; --sage: #7A9E7E; --light: #FAF8F3;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* LEFT PANEL */
+    .left-panel {
+      background: var(--ink);
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: flex-start;
+      padding: 4rem;
+      position: relative; overflow: hidden;
+    }
+    .left-panel::before {
+      content: '';
+      position: absolute; top: -120px; right: -120px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(196,98,45,0.25) 0%, transparent 65%);
+      border-radius: 50%;
+    }
+    .left-panel::after {
+      content: '';
+      position: absolute; bottom: -80px; left: -60px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(122,158,126,0.2) 0%, transparent 65%);
+      border-radius: 50%;
+    }
+    .panel-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem; color: #fff;
+      text-decoration: none; margin-bottom: 3rem;
+      position: relative; z-index: 2;
+    }
+    .panel-logo span { color: var(--terracotta); font-style: italic; }
+    .panel-quote {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      color: #fff; line-height: 1.25;
+      margin-bottom: 1.5rem;
+      position: relative; z-index: 2;
+    }
+    .panel-quote em { color: var(--gold); font-style: italic; }
+    .panel-sub {
+      font-size: 0.95rem; color: rgba(255,255,255,0.55);
+      line-height: 1.7; max-width: 380px;
+      position: relative; z-index: 2;
+    }
+    .panel-badges {
+      display: flex; gap: 0.75rem; margin-top: 2.5rem;
+      flex-wrap: wrap; position: relative; z-index: 2;
+    }
+    .badge {
+      padding: 0.4rem 1rem; border-radius: 50px;
+      font-size: 0.78rem; font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+    }
+
+    /* RIGHT PANEL — FORM */
+    .right-panel {
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      padding: 4rem 3rem;
+      background: var(--light);
+    }
+    .form-container { width: 100%; max-width: 400px; }
+
+    /* Tab switcher */
+    .tabs {
+      display: flex; background: var(--cream);
+      border-radius: 50px; padding: 4px;
+      margin-bottom: 2.5rem;
+    }
+    .tab {
+      flex: 1; padding: 0.6rem 1rem; border: none;
+      border-radius: 50px; cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; font-weight: 500;
+      background: transparent; color: rgba(26,26,46,0.5);
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: #fff; color: var(--ink);
+      box-shadow: 0 2px 8px rgba(26,26,46,0.1);
+    }
+
+    .form-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.9rem; margin-bottom: 0.4rem;
+    }
+    .form-subtitle {
+      font-size: 0.88rem; color: rgba(26,26,46,0.5);
+      margin-bottom: 2rem; line-height: 1.5;
+    }
+
+    .form-group { margin-bottom: 1.2rem; }
+    label {
+      display: block; font-size: 0.82rem; font-weight: 500;
+      color: rgba(26,26,46,0.7); margin-bottom: 0.4rem;
+    }
+    input[type="text"], input[type="email"], input[type="password"], select {
+      width: 100%; padding: 0.75rem 1rem;
+      border: 1.5px solid rgba(26,26,46,0.12);
+      border-radius: 10px; font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem; color: var(--ink);
+      background: #fff; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus {
+      border-color: var(--terracotta);
+      box-shadow: 0 0 0 3px rgba(196,98,45,0.1);
+    }
+    select { appearance: none; cursor: pointer; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .forgot {
+      display: block; text-align: right; font-size: 0.8rem;
+      color: var(--terracotta); text-decoration: none; margin-top: 0.3rem;
+    }
+    .forgot:hover { text-decoration: underline; }
+
+    .btn-submit {
+      width: 100%; padding: 0.9rem;
+      background: var(--terracotta); color: #fff;
+      border: none; border-radius: 50px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem; font-weight: 500;
+      cursor: pointer; margin-top: 1.5rem;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-submit:hover { background: #a8521f; transform: translateY(-1px); }
+    .btn-submit:active { transform: translateY(0); }
+
+    .divider {
+      display: flex; align-items: center; gap: 1rem;
+      margin: 1.5rem 0; color: rgba(26,26,46,0.3); font-size: 0.8rem;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1;
+      height: 1px; background: rgba(26,26,46,0.1);
+    }
+
+    .terms {
+      font-size: 0.78rem; color: rgba(26,26,46,0.45);
+      text-align: center; margin-top: 1.2rem; line-height: 1.6;
+    }
+    .terms a { color: var(--terracotta); text-decoration: none; }
+
+    /* Panel shown for signup vs login */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* Error / success messages */
+    .msg {
+      padding: 0.7rem 1rem; border-radius: 8px;
+      font-size: 0.84rem; margin-bottom: 1rem; display: none;
+    }
+    .msg.error { background: rgba(196,98,45,0.1); color: var(--terracotta); border: 1px solid rgba(196,98,45,0.2); }
+    .msg.success { background: rgba(122,158,126,0.1); color: var(--sage); border: 1px solid rgba(122,158,126,0.3); }
+
+    @media (max-width: 768px) {
+      body { grid-template-columns: 1fr; }
+      .left-panel { display: none; }
+      .right-panel { padding: 3rem 1.5rem; }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .form-container { animation: fadeUp 0.5s ease both; }
+  </style>
+</head>
+<body>
+
+<!-- LEFT DECORATIVE PANEL -->
+<div class="left-panel">
+  <a href="index.html" class="panel-logo">Usu <span>Loqui</span></a>
+  <h2 class="panel-quote">Fluency comes from <em>doing</em>, not just studying.</h2>
+  <p class="panel-sub">Practice real Spanish conversations with an AI that adapts to your level. Every session makes you better.</p>
+  <div class="panel-badges">
+    <span class="badge">🗣 Freeform chat</span>
+    <span class="badge">📊 Progress tracking</span>
+    <span class="badge">🔍 NLP feedback</span>
+    <span class="badge">📖 CEFR aligned</span>
+  </div>
+</div>
+
+<!-- RIGHT FORM PANEL -->
+<div class="right-panel">
+  <div class="form-container">
+
+    <!-- Tab toggle -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Log In</button>
+      <button class="tab" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- LOGIN PANEL -->
+    <div class="panel active" id="panel-login">
+      <h2 class="form-title">Welcome back</h2>
+      <p class="form-subtitle">Log in to continue your Spanish practice.</p>
+
+      <div class="msg error" id="login-error">Invalid email or password. Please try again.</div>
+
+      <div class="form-group">
+        <label for="login-email">Email address</label>
+        <input type="email" id="login-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" placeholder="••••••••"/>
+        <a href="#" class="forgot">Forgot password?</a>
+      </div>
+
+      <button class="btn-submit" onclick="handleLogin()">Log In</button>
+
+      <div class="divider">or</div>
+      <p class="terms">Don't have an account? <a href="#" onclick="switchTab('signup')">Sign up for free</a></p>
+    </div>
+
+    <!-- SIGNUP PANEL -->
+    <div class="panel" id="panel-signup">
+      <h2 class="form-title">Create account</h2>
+      <p class="form-subtitle">Start practicing Spanish in under 5 minutes.</p>
+
+      <div class="msg error" id="signup-error">Please fill in all fields.</div>
+      <div class="msg success" id="signup-success">Account created! Redirecting to your dashboard…</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="signup-first">First name</label>
+          <input type="text" id="signup-first" placeholder="Maria"/>
+        </div>
+        <div class="form-group">
+          <label for="signup-last">Last name</label>
+          <input type="text" id="signup-last" placeholder="Colon"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="signup-username">Username</label>
+        <input type="text" id="signup-username" placeholder="mariacolon"/>
+      </div>
+      <div class="form-group">
+        <label for="signup-email">Email address</label>
+        <input type="email" id="signup-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label for="signup-password">Password</label>
+        <input type="password" id="signup-password" placeholder="At least 8 characters"/>
+      </div>
+      <div class="form-group">
+        <label for="signup-level">Spanish proficiency level</label>
+        <select id="signup-level">
+          <option value="">Select your level…</option>
+          <option value="beginner">Beginner (A1–A2)</option>
+          <option value="intermediate">Intermediate (B1–B2)</option>
+          <option value="advanced">Advanced (C1–C2)</option>
+        </select>
+      </div>
+
+      <button class="btn-submit" onclick="handleSignup()">Create Account</button>
+      <p class="terms" style="margin-top:1rem;">Already have an account? <a href="#" onclick="switchTab('login')">Log in</a></p>
+      <p class="terms">By signing up you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', (tab === 'login' ? i === 0 : i === 1));
+    });
+    document.getElementById('panel-login').classList.toggle('active', tab === 'login');
+    document.getElementById('panel-signup').classList.toggle('active', tab === 'signup');
+    document.querySelectorAll('.msg').forEach(m => m.style.display = 'none');
+  }
+
+  function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-password').value.trim();
+    const err   = document.getElementById('login-error');
+    if (!email || !pass) {
+      err.style.display = 'block';
+      return;
+    }
+    err.style.display = 'none';
+    // Simulate login → redirect to chat
+    window.location.href = 'chat.html';
+  }
+
+  function handleSignup() {
+    const first = document.getElementById('signup-first').value.trim();
+    const last  = document.getElementById('signup-last').value.trim();
+    const user  = document.getElementById('signup-username').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const pass  = document.getElementById('signup-password').value.trim();
+    const level = document.getElementById('signup-level').value;
+    const err   = document.getElementById('signup-error');
+    const ok    = document.getElementById('signup-success');
+
+    if (!first || !last || !user || !email || !pass || !level) {
+      err.style.display = 'block';
+      ok.style.display  = 'none';
+      return;
+    }
+    err.style.display = 'none';
+    ok.style.display  = 'block';
+    setTimeout(() => window.location.href = 'chat.html', 1500);
+  }
+</script>
+</body>
+</html>
