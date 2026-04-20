@@ -4,9 +4,9 @@ import { signOut } from "firebase/auth";
 import { auth } from "../../auth/firebase";
 export default function Navbar({ user }) {
   const navigate = useNavigate();
-  const handleGetStarted = () => {
-    navigate("/register");
-  };
+  // const handleGetStarted = () => {
+  //   navigate("/register");
+  // };
   const handleLogout = () => {
     signOut(auth);
     navigate("/");
@@ -14,26 +14,45 @@ export default function Navbar({ user }) {
 
   return (
     <nav>
-      <a onClick={() => navigate(user ? "/dashboard" : "/")} className="nav-logo" style={{ cursor: "pointer" }}>
+      <a
+        onClick={() => navigate(user ? "/dashboard" : "/")}
+        className="nav-logo"
+        style={{ cursor: "pointer" }}
+      >
         Usu <span>Loqui</span>
       </a>
 
       <ul className="nav-links">
         {user && (
           <li>
-            <a onClick={() => navigate("/dashboard")} style={{ cursor: "pointer" }}>Home</a>
+            <a
+              onClick={() => navigate("/dashboard")}
+              style={{ cursor: "pointer" }}
+            >
+              Home
+            </a>
           </li>
         )}
-          {user && (
-              <li>
-                  <a onClick={() => navigate("/conversations")} style={{ cursor: "pointer" }}>Conversations</a>
-              </li>
-          )}
-          {user && (
-              <li>
-                  <a onClick={() => navigate("/settings")} style={{ cursor: "pointer" }}>Settings</a>
-              </li>
-          )}
+        {user && (
+          <li>
+            <a
+              onClick={() => navigate("/conversations")}
+              style={{ cursor: "pointer" }}
+            >
+              Conversations
+            </a>
+          </li>
+        )}
+        {user && (
+          <li>
+            <a
+              onClick={() => navigate("/settings")}
+              style={{ cursor: "pointer" }}
+            >
+              Settings
+            </a>
+          </li>
+        )}
         {!user && (
           <li>
             <a href="/#features">Features</a>
@@ -51,14 +70,17 @@ export default function Navbar({ user }) {
         )}
         {!user && (
           <li>
-            <a onClick={handleGetStarted} className="btn-nav">
+            {/* <a onClick={handleGetStarted} className="btn-nav">
               Get Started
-            </a>
+            </a> */}
           </li>
         )}
         {!user && (
           <li>
-            <a onClick={() => navigate("/login")} className="btn-nav btn-nav-outline">
+            <a
+              onClick={() => navigate("/login")}
+              className="btn-nav btn-nav-outline"
+            >
               Login
             </a>
           </li>
