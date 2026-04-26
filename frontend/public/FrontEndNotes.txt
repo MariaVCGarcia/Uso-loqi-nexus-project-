@@ -1,0 +1,6 @@
+tasks(ilyas): 
+- switch from google api to firebase.
+- switch to react
+- integrate and merge webpages
+- material design icons
+- the noun project
