@@ -1,7 +1,9 @@
 import "./login.css";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { loginUser } from "../../auth/auth";
+import { loginUser, registerUser, updateDisplayName } from "../../auth/auth";
+import { db } from "../../auth/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -43,28 +45,33 @@ export default function Login() {
     }
   };
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
 
-    if (
-      !firstName ||
-      !lastName ||
-      !username ||
-      !signupEmail ||
-      !signupPassword ||
-      !level
-    ) {
+    if (!firstName || !lastName || !username || !signupEmail || !signupPassword || !level) {
       setSignupError("Please fill in all fields.");
       setSignupSuccess("");
       return;
     }
 
     setSignupError("");
-    setSignupSuccess("Account created! Redirecting to your dashboard…");
 
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 1500);
+    try {
+      const credential = await registerUser(signupEmail, signupPassword);
+      await updateDisplayName(`${firstName} ${lastName}`);
+      await setDoc(doc(db, "users", credential.user.uid), {
+        firstName,
+        lastName,
+        username,
+        email: signupEmail,
+        level,
+        createdAt: new Date(),
+      });
+      setSignupSuccess("Account created! Redirecting to your dashboard…");
+      setTimeout(() => navigate("/dashboard"), 1500);
+    } catch (err) {
+      setSignupError(err.message);
+    }
   };
 
   return (

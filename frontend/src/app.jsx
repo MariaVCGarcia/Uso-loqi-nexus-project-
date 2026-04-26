@@ -4,7 +4,7 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { auth } from "./auth/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -26,12 +26,10 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    return onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
     });
-
-    return unsubscribe;
   }, []);
 
   if (loading) {
@@ -57,7 +55,7 @@ function App() {
         />
         <Route
           path="/settings"
-          element={user ? <Settings /> : <Navigate to="/login" />}
+          element={user ? <Settings user={user} /> : <Navigate to="/login" />}
         />
         <Route
           path="/conversations"

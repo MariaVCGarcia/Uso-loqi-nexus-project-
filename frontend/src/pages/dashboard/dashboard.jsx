@@ -1,7 +1,28 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { db } from "../../auth/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import "./dashboard.css";
 
-export default function Dashboard() {
+const LEVEL_MAP = {
+  beginner:     { code: "A1", label: "Beginner" },
+  intermediate: { code: "B1", label: "Intermediate" },
+  advanced:     { code: "C1", label: "Advanced" },
+};
+
+export default function Dashboard({ user }) {
+  const displayName = user?.displayName?.split(" ")[0] || user?.email || "there";
+  const [level, setLevel] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+    getDoc(doc(db, "users", user.uid)).then((snap) => {
+      if (snap.exists()) setLevel(snap.data().level);
+    });
+  }, [user]);
+
+  const badge = LEVEL_MAP[level] || null;
+
   return (
     <div className="page">
 
@@ -9,9 +30,12 @@ export default function Dashboard() {
       <div className="dash-header">
         <div>
           <h1>Your Progress</h1>
-          <p>Welcome back, Joseph · 5-day streak 🔥 · Last session: Today</p>
+          <p>Welcome back, {displayName} · 5-day streak 🔥 · Last session: Today</p>
         </div>
-        <div className="cefr-badge">B1 <span>Intermediate</span></div>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <span className="dash-username">{displayName}</span>
+          {badge && <div className="cefr-badge">{badge.code} <span>{badge.label}</span></div>}
+        </div>
       </div>
 
       {/* TOP STAT CARDS */}

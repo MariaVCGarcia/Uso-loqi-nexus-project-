@@ -1,7 +1,8 @@
 .chat-page {
   display: flex;
   flex: 1;
-  height: calc(100vh - 60px); /* subtract navbar height */
+  height: calc(100vh - 60px);
+  margin-top: 60px;
   overflow: hidden;
   background: var(--light);
 }
