@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Usu Loqui — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!--
+    Firebase usage is correct — single initializeApp, modular CDN imports, all helpers exposed.
+    FIX: dashboard read profile.cefrLevel but signup writes profile.level — unified to `level`.
+  -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc,
+      collection, query, orderBy, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyB-__m7BPGPdLu8uwg5Z2xtCUb8cGT7stA",
+      authDomain:        "uso-loqi-f4305.firebaseapp.com",
+      projectId:         "uso-loqi-f4305",
+      storageBucket:     "uso-loqi-f4305.firebasestorage.app",
+      messagingSenderId: "54174701224",
+      appId:             "1:54174701224:web:2ef0fa9119c688f944149d",
+      measurementId:     "G-S534KMVVXG"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    window._firebaseAuth = auth;
+    window._firebaseDB   = db;
+    window._fbOnAuth     = onAuthStateChanged;
+    window._fbSignOut    = signOut;
+    window._fbDoc        = doc;
+    window._fbGetDoc     = getDoc;
+    window._fbCollection = collection;
+    window._fbQuery      = query;
+    window._fbOrderBy    = orderBy;
+    window._fbGetDocs    = getDocs;
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #F5F0E8; --ink: #1A1A2E; --terracotta: #C4622D;
+      --gold: #D4A843; --sage: #7A9E7E; --light: #FAF8F3;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--light); color: var(--ink); min-height: 100vh; }
+
+    /* NAV */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem 2.5rem;
+      background: rgba(250,248,243,0.97); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(26,26,46,0.08);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--ink); text-decoration: none; }
+    .nav-logo span { color: var(--terracotta); font-style: italic; }
+    .nav-links { display: flex; gap: 1.5rem; list-style: none; align-items: center; }
+    .nav-links a {
+      text-decoration: none; font-size: 0.87rem; color: rgba(26,26,46,0.55);
+      transition: color 0.2s; font-weight: 400;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--ink); font-weight: 500; }
+    .btn-chat {
+      padding: 0.45rem 1.2rem; border-radius: 50px;
+      background: var(--terracotta); color: #fff; text-decoration: none;
+      font-size: 0.85rem; font-weight: 500; transition: background 0.2s;
+    }
+    .btn-chat:hover { background: #a8521f; color: #fff; }
+    .btn-signout {
+      padding: 0.45rem 1.2rem; border-radius: 50px;
+      background: transparent; color: rgba(26,26,46,0.55);
+      border: 1px solid rgba(26,26,46,0.18); font-size: 0.85rem;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+    .btn-signout:hover { background: rgba(26,26,46,0.05); color: var(--ink); }
+
+    /* PAGE */
+    .page { max-width: 1200px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+
+    /* HEADER */
+    .dash-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .dash-header h1 { font-family: 'Playfair Display', serif; font-size: 2.1rem; margin-bottom: 0.25rem; }
+    .dash-header p { font-size: 0.88rem; color: rgba(26,26,46,0.5); }
+    .header-right { display: flex; align-items: center; gap: 0.75rem; }
+    .cefr-badge {
+      padding: 0.5rem 1.3rem; border-radius: 50px;
+      background: var(--ink); color: #fff;
+      font-family: 'Playfair Display', serif; font-size: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .cefr-badge span { font-size: 0.74rem; opacity: 0.55; font-family: 'DM Sans', sans-serif; }
+    .btn-progression {
+      padding: 0.5rem 1.2rem; border-radius: 50px;
+      background: rgba(122,158,126,0.12); color: var(--sage);
+      border: 1px solid rgba(122,158,126,0.25); text-decoration: none;
+      font-size: 0.84rem; font-weight: 500; transition: all 0.2s;
+    }
+    .btn-progression:hover { background: rgba(122,158,126,0.2); }
+
+    /* STATS ROW */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; margin-bottom: 2rem; }
+    .stat-card {
+      background: #fff; border-radius: 16px; padding: 1.4rem 1.5rem;
+      border: 1px solid rgba(26,26,46,0.07);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(26,26,46,0.07); }
+    .stat-card-label { font-size: 0.76rem; color: rgba(26,26,46,0.45); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 500; }
+    .stat-card-value { font-family: 'Playfair Display', serif; font-size: 2.1rem; color: var(--ink); line-height: 1; }
+    .stat-card-sub { font-size: 0.76rem; color: rgba(26,26,46,0.38); margin-top: 0.4rem; }
+    .stat-card-trend { font-size: 0.76rem; margin-top: 0.4rem; }
+    .trend-up   { color: var(--sage);       }
+    .trend-down { color: var(--terracotta); }
+
+    /* CARDS */
+    .grid-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .card { background: #fff; border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(26,26,46,0.07); }
+    .card-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 0.25rem; }
+    .card-sub { font-size: 0.79rem; color: rgba(26,26,46,0.42); margin-bottom: 1.4rem; }
+
+    /* BAR CHART */
+    .bar-chart { display: flex; flex-direction: column; gap: 0.9rem; }
+    .bar-row { display: flex; align-items: center; gap: 0.9rem; }
+    .bar-label { font-size: 0.81rem; width: 90px; flex-shrink: 0; color: rgba(26,26,46,0.62); }
+    .bar-track { flex: 1; height: 9px; background: var(--cream); border-radius: 50px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 50px; transition: width 1s ease; }
+    .bar-val { font-size: 0.79rem; font-weight: 500; width: 36px; text-align: right; }
+
+    /* HEATMAP */
+    .heatmap-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 5px; margin-top: 0.75rem; }
+    .heat-cell { aspect-ratio: 1; border-radius: 4px; background: var(--cream); transition: transform 0.1s; cursor: default; }
+    .heat-cell:hover { transform: scale(1.25); }
+    .heat-cell.l1 { background: rgba(196,98,45,0.18); }
+    .heat-cell.l2 { background: rgba(196,98,45,0.42); }
+    .heat-cell.l3 { background: rgba(196,98,45,0.68); }
+    .heat-cell.l4 { background: var(--terracotta); }
+
+    /* STRENGTHS */
+    .strength-list { display: flex; flex-direction: column; gap: 0.55rem; }
+    .strength-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.9rem; border-radius: 10px; font-size: 0.84rem; }
+    .strength-item.good    { background: rgba(122,158,126,0.09); border: 1px solid rgba(122,158,126,0.18); }
+    .strength-item.improve { background: rgba(212,168,67,0.07);  border: 1px solid rgba(212,168,67,0.18);  }
+
+    /* SESSION TABLE */
+    .history-table { width: 100%; border-collapse: collapse; }
+    .history-table th {
+      text-align: left; font-size: 0.71rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: rgba(26,26,46,0.38); padding: 0 0.75rem 0.75rem;
+      border-bottom: 1px solid rgba(26,26,46,0.08);
+    }
+    .history-table td { padding: 0.85rem 0.75rem; font-size: 0.84rem; border-bottom: 1px solid rgba(26,26,46,0.05); vertical-align: middle; }
+    .history-table tr:last-child td { border-bottom: none; }
+    .history-table tr:hover td { background: var(--cream); }
+    .tag { display: inline-block; padding: 0.2rem 0.65rem; border-radius: 50px; font-size: 0.71rem; font-weight: 500; }
+    .tag.dining   { background: rgba(196,98,45,0.1);  color: var(--terracotta); }
+    .tag.travel   { background: rgba(212,168,67,0.12); color: #8a6010; }
+    .tag.business { background: rgba(26,26,46,0.07);   color: var(--ink);       }
+    .tag.casual   { background: rgba(122,158,126,0.12);color: #3a6840;          }
+    .tag.academic { background: rgba(196,98,45,0.08);  color: #7a3818;          }
+    .score-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+    .score-high { background: var(--sage);       }
+    .score-mid  { background: var(--gold);       }
+    .score-low  { background: var(--terracotta); }
+
+    .loading-state { text-align: center; padding: 5rem; color: rgba(26,26,46,0.4); font-size: 0.9rem; }
+    .empty-state { font-size: 0.88rem; color: rgba(26,26,46,0.42); padding: 1.5rem 0; }
+
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="dashboard-root"></div>
+
+<script type="text/babel">
+  const { useState, useEffect } = React;
+
+  function DashboardApp() {
+    const [authUser, setAuthUser] = useState(null);
+    const [profile,  setProfile]  = useState(null);
+    const [sessions, setSessions] = useState([]);
+    const [loading,  setLoading]  = useState(true);
+
+    useEffect(() => {
+      const unsubscribe = window._fbOnAuth(window._firebaseAuth, async (user) => {
+        if (!user) { window.location.href = 'login.html'; return; }
+        setAuthUser(user);
+        try {
+          const profileSnap = await window._fbGetDoc(window._fbDoc(window._firebaseDB, 'users', user.uid));
+          if (profileSnap.exists()) setProfile(profileSnap.data());
+
+          const q    = window._fbQuery(
+            window._fbCollection(window._firebaseDB, 'sessions', user.uid, 'records'),
+            window._fbOrderBy('date', 'desc')
+          );
+          const snap = await window._fbGetDocs(q);
+          setSessions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        } catch (err) {
+          console.error('Firestore load error:', err);
+        } finally {
+          setLoading(false);
+        }
+      });
+      return () => unsubscribe();
+    }, []);
+
+    async function handleSignOut() {
+      await window._fbSignOut(window._firebaseAuth);
+      window.location.href = 'login.html';
+    }
+
+    if (loading) return <div className="loading-state"><p>Loading your dashboard…</p></div>;
+
+    const firstName     = profile?.firstName || authUser?.displayName?.split(' ')[0] || 'Learner';
+    // FIX: signup writes `level` (not `cefrLevel`). Read profile.level with a sensible fallback.
+    const levelRaw      = profile?.level || 'intermediate';
+    const cefrLabel     = { beginner: 'A1–A2', intermediate: 'B1–B2', advanced: 'C1–C2' }[levelRaw] || levelRaw;
+    const streak        = profile?.streakDays   || 0;
+    const totalSessions = profile?.sessionsTotal || sessions.length;
+
+    return (
+      <>
+        <nav>
+          <a href="ilyas-landing.html" className="nav-logo">Usu <span>Loqui</span></a>
+          <ul className="nav-links">
+            <li><a href="dashboard.html"  className="active">Dashboard</a></li>
+            <li><a href="progression.html">My Progress</a></li>
+            <li><a href="chat.html">Practice</a></li>
+            <li><button className="btn-signout" onClick={handleSignOut}>Sign Out</button></li>
+            <li><a href="chat.html" className="btn-chat">+ New session</a></li>
+          </ul>
+        </nav>
+
+        <div className="page">
+          <div className="dash-header">
+            <div>
+              <h1>¡Hola, {firstName}!</h1>
+              <p>Here's your learning progress at a glance.</p>
+            </div>
+            <div className="header-right">
+              <a href="progression.html" className="btn-progression">📈 View Progression</a>
+              <div className="cefr-badge">{cefrLabel} <span>Current level</span></div>
+            </div>
+          </div>
+
+          <div className="stats-row">
+            <StatCard label="Sessions" value={totalSessions} sub="conversations completed" trend="↑ +3 this week" up />
+            <StatCard label="Streak"   value={`🔥 ${streak}`} sub="days in a row" trend="Keep it going!" up />
+            <StatCard label="Accuracy" value={profile?.avgAccuracy ? `${profile.avgAccuracy}%` : '—'} sub="average score" trend="↑ 4% vs last week" up />
+            <StatCard label="Vocab"    value={profile?.uniqueWords || '—'} sub="unique words used" trend="↑ +31 this week" up />
+          </div>
+
+          <div className="card" style={{marginBottom:'1.5rem'}}>
+            <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'0.25rem'}}>
+              <div className="card-title">Conversation History</div>
+              <a href="chat.html" style={{fontSize:'0.82rem', color:'var(--terracotta)', textDecoration:'none', fontWeight:500}}>+ New session</a>
+            </div>
+            <div className="card-sub">All saved sessions with performance data</div>
+
+            {sessions.length === 0 ? (
+              <p className="empty-state">
+                No sessions yet. <a href="chat.html" style={{color:'var(--terracotta)', fontWeight:500}}>Start your first conversation →</a>
+              </p>
+            ) : (
+              <table className="history-table">
+                <thead>
+                  <tr><th>Date</th><th>Scenario</th><th>Duration</th><th>Messages</th><th>Score</th><th></th></tr>
+                </thead>
+                <tbody>
+                  {sessions.map(s => <SessionRow key={s.id} session={s} />)}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <StaticDashboardCards />
+        </div>
+      </>
+    );
+  }
+
+  function StatCard({ label, value, sub, trend, up }) {
+    return (
+      <div className="stat-card">
+        <div className="stat-card-label">{label}</div>
+        <div className="stat-card-value">{value}</div>
+        <div className="stat-card-sub">{sub}</div>
+        {trend && <div className={`stat-card-trend ${up ? 'trend-up' : 'trend-down'}`}>{trend}</div>}
+      </div>
+    );
+  }
+
+  function SessionRow({ session }) {
+    const dotClass  = session.score >= 80 ? 'score-high' : session.score >= 65 ? 'score-mid' : 'score-low';
+    const tagMap    = { dining:'dining', travel:'travel', business:'business', casual:'casual', academic:'academic' };
+    const tagClass  = tagMap[session.scenario?.toLowerCase()] || 'casual';
+    const formatted = session.date
+      ? new Date(session.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+      : '—';
+    return (
+      <tr>
+        <td>{formatted}</td>
+        <td><span className={`tag ${tagClass}`}>{session.scenario || '—'}</span></td>
+        <td>{session.duration || '—'}</td>
+        <td>{session.messageCount || '—'}</td>
+        <td>
+          <span className={`score-dot ${dotClass}`}></span>
+          {session.score != null ? `${session.score}%` : '—'}
+        </td>
+        <td><a href="#" style={{fontSize:'0.8rem', color:'var(--terracotta)', textDecoration:'none', fontWeight:500}}>Review</a></td>
+      </tr>
+    );
+  }
+
+  function StaticDashboardCards() {
+    useEffect(() => {
+      const heatmap = document.getElementById('heatmap');
+      if (!heatmap || heatmap.childElementCount > 0) return;
+      const levels  = ['', 'l1', 'l2', 'l3', 'l4'];
+      const weights = [0,0,0,1,1,1,1,2,2,2,2,3,3,3,4,4,4,4,0,0,0,0,1,1,2,2,2,3,3,3,4,4,4,4,4,0,0,1,1,2,2,2,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4];
+      for (let i = 0; i < 84; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'heat-cell';
+        const w = weights[i] !== undefined ? weights[i] : (Math.random() < 0.35 ? Math.floor(Math.random() * 5) : 0);
+        if (w > 0) cell.classList.add(levels[w]);
+        heatmap.appendChild(cell);
+      }
+    }, []);
+
+    return (
+      <div dangerouslySetInnerHTML={{ __html: `
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-title">Error Rate by Category</div>
+            <div class="card-sub">Averaged across your last 5 sessions</div>
+            <div class="bar-chart">
+              <div class="bar-row"><span class="bar-label">Verb conjugation</span><div class="bar-track"><div class="bar-fill" style="width:68%;background:var(--terracotta);"></div></div><span class="bar-val trend-down">68%</span></div>
+              <div class="bar-row"><span class="bar-label">Gender agreement</span><div class="bar-track"><div class="bar-fill" style="width:52%;background:var(--gold);"></div></div><span class="bar-val" style="color:var(--gold);">52%</span></div>
+              <div class="bar-row"><span class="bar-label">Prepositions</span><div class="bar-track"><div class="bar-fill" style="width:41%;background:var(--gold);"></div></div><span class="bar-val" style="color:var(--gold);">41%</span></div>
+              <div class="bar-row"><span class="bar-label">Subjunctive</span><div class="bar-track"><div class="bar-fill" style="width:74%;background:var(--terracotta);"></div></div><span class="bar-val trend-down">74%</span></div>
+              <div class="bar-row"><span class="bar-label">Word order</span><div class="bar-track"><div class="bar-fill" style="width:22%;background:var(--sage);"></div></div><span class="bar-val trend-up">22%</span></div>
+              <div class="bar-row"><span class="bar-label">Vocabulary</span><div class="bar-track"><div class="bar-fill" style="width:18%;background:var(--sage);"></div></div><span class="bar-val trend-up">18%</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Strengths & Areas</div>
+            <div class="card-sub">Based on your last 5 sessions</div>
+            <div style="margin-bottom:0.7rem;font-size:0.74rem;font-weight:600;color:var(--sage);letter-spacing:0.06em;text-transform:uppercase;">✓ Strengths</div>
+            <div class="strength-list" style="margin-bottom:1.2rem;">
+              <div class="strength-item good"><span>🎯</span> Contextually appropriate responses</div>
+              <div class="strength-item good"><span>💬</span> Response fluency improving</div>
+              <div class="strength-item good"><span>📚</span> Strong vocabulary diversity</div>
+            </div>
+            <div style="margin-bottom:0.7rem;font-size:0.74rem;font-weight:600;color:var(--gold);letter-spacing:0.06em;text-transform:uppercase;">⚠ Improve</div>
+            <div class="strength-list">
+              <div class="strength-item improve"><span>🔧</span> Preterite vs. imperfect</div>
+              <div class="strength-item improve"><span>📝</span> Gender agreement</div>
+              <div class="strength-item improve"><span>🔄</span> Subjunctive mood</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:1.5rem;">
+          <div class="card-title">Activity Heatmap</div>
+          <div class="card-sub">Practice sessions this year — darker = more sessions</div>
+          <div id="heatmap" class="heatmap-grid"></div>
+        </div>
+      ` }} />
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('dashboard-root')).render(<DashboardApp />);
+</script>
+
+</body>
+</html>

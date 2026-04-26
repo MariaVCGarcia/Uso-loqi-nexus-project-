@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Usu Loqui — Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!--
+    Firebase usage is correct throughout this file.
+    FIX: Level display in sidebar stats used brittle string checks (level.includes('nter')).
+         Replaced with a clean lookup map.
+  -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc,
+      collection, addDoc, updateDoc, increment, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyB-__m7BPGPdLu8uwg5Z2xtCUb8cGT7stA",
+      authDomain:        "uso-loqi-f4305.firebaseapp.com",
+      projectId:         "uso-loqi-f4305",
+      storageBucket:     "uso-loqi-f4305.firebasestorage.app",
+      messagingSenderId: "54174701224",
+      appId:             "1:54174701224:web:2ef0fa9119c688f944149d",
+      measurementId:     "G-S534KMVVXG"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    window._firebaseAuth = auth;
+    window._firebaseDB   = db;
+    window._fbOnAuth     = onAuthStateChanged;
+    window._fbDoc        = doc;
+    window._fbGetDoc     = getDoc;
+    window._fbCollection = collection;
+    window._fbAddDoc     = addDoc;
+    window._fbUpdateDoc  = updateDoc;
+    window._fbIncrement  = increment;
+    window._fbServerTS   = serverTimestamp;
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --cream: #F5F0E8; --ink: #1A1A2E; --terracotta: #C4622D; --gold: #D4A843; --sage: #7A9E7E; --light: #FAF8F3; }
+    html, body { height: 100%; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--light); color: var(--ink); display: flex; flex-direction: column; }
+
+    /* NAV */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem 2rem;
+      background: rgba(250,248,243,0.97); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(26,26,46,0.08);
+      flex-shrink: 0; z-index: 50;
+    }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--ink); text-decoration: none; }
+    .nav-logo span { color: var(--terracotta); font-style: italic; }
+    .nav-center { display: flex; align-items: center; gap: 0.75rem; }
+    .scenario-badge {
+      padding: 0.3rem 0.9rem; border-radius: 50px; font-size: 0.78rem; font-weight: 500;
+      background: var(--cream); border: 1px solid rgba(26,26,46,0.1); color: rgba(26,26,46,0.65);
+    }
+    .level-pill {
+      padding: 0.3rem 0.9rem; border-radius: 50px; font-size: 0.78rem; font-weight: 500;
+      background: rgba(196,98,45,0.1); color: var(--terracotta); border: 1px solid rgba(196,98,45,0.18);
+    }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-link { font-size: 0.85rem; color: rgba(26,26,46,0.55); text-decoration: none; transition: color 0.2s; }
+    .nav-link:hover { color: var(--ink); }
+    .btn-end {
+      padding: 0.45rem 1.1rem; border-radius: 50px; font-size: 0.82rem; font-weight: 500;
+      background: transparent; cursor: pointer;
+      border: 1.5px solid rgba(196,98,45,0.38); color: var(--terracotta);
+      font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+    }
+    .btn-end:hover { background: var(--terracotta); color: #fff; }
+
+    /* LAYOUT */
+    .app-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 256px; flex-shrink: 0;
+      background: var(--cream); border-right: 1px solid rgba(26,26,46,0.08);
+      display: flex; flex-direction: column; padding: 1.5rem 1.2rem; overflow-y: auto;
+    }
+    .sidebar-section { margin-bottom: 2rem; }
+    .sidebar-label {
+      font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.12em; color: rgba(26,26,46,0.38); margin-bottom: 0.75rem;
+    }
+    .scenario-list { display: flex; flex-direction: column; gap: 0.35rem; }
+    .scenario-item {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.6rem 0.8rem; border-radius: 10px; cursor: pointer;
+      font-size: 0.87rem; color: rgba(26,26,46,0.6);
+      transition: all 0.15s; border: 1px solid transparent;
+    }
+    .scenario-item:hover { background: rgba(26,26,46,0.04); color: var(--ink); }
+    .scenario-item.active {
+      background: #fff; color: var(--ink);
+      border-color: rgba(26,26,46,0.09);
+      box-shadow: 0 2px 8px rgba(26,26,46,0.06);
+    }
+    .streak-box {
+      background: #fff; border-radius: 12px; padding: 1rem;
+      border: 1px solid rgba(26,26,46,0.07); text-align: center;
+    }
+    .streak-number { font-family: 'Playfair Display', serif; font-size: 2.1rem; color: var(--terracotta); line-height: 1; }
+    .streak-label { font-size: 0.74rem; color: rgba(26,26,46,0.45); margin-top: 0.3rem; }
+    .sidebar-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+    .stat-mini {
+      background: #fff; border-radius: 10px; padding: 0.75rem 0.6rem;
+      text-align: center; border: 1px solid rgba(26,26,46,0.06);
+    }
+    .stat-mini-num { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--ink); display: block; }
+    .stat-mini-label { font-size: 0.67rem; color: rgba(26,26,46,0.42); }
+
+    /* CHAT AREA */
+    .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--light); }
+    .session-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.72rem 1.5rem; background: #fff;
+      border-bottom: 1px solid rgba(26,26,46,0.06);
+      font-size: 0.81rem; color: rgba(26,26,46,0.5); flex-shrink: 0;
+    }
+    .session-bar span { display: flex; align-items: center; gap: 0.4rem; }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--sage); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.35;} }
+
+    /* MESSAGES */
+    .messages { flex: 1; overflow-y: auto; padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1rem; }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-thumb { background: rgba(26,26,46,0.1); border-radius: 2px; }
+    .date-divider {
+      text-align: center; font-size: 0.74rem; color: rgba(26,26,46,0.3);
+      margin: 0.5rem 0; position: relative;
+    }
+    .date-divider::before, .date-divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: rgba(26,26,46,0.07); }
+    .date-divider::before { left: 0; } .date-divider::after { right: 0; }
+    .msg-row {
+      display: flex; gap: 0.75rem; max-width: 680px;
+      animation: fadeMsg 0.22s ease both;
+    }
+    @keyframes fadeMsg { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
+    .msg-avatar {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 600; margin-top: 2px;
+    }
+    .msg-avatar.ai   { background: var(--ink);        color: #fff; font-family: 'Playfair Display', serif; }
+    .msg-avatar.user { background: var(--terracotta); color: #fff; }
+    .bubble {
+      padding: 0.78rem 1.1rem; border-radius: 16px;
+      font-size: 0.9rem; line-height: 1.55; max-width: 500px;
+    }
+    .bubble.ai   { background: #fff; color: var(--ink); border: 1px solid rgba(26,26,46,0.07); border-top-left-radius: 4px; }
+    .bubble.user { background: var(--terracotta); color: #fff; border-top-right-radius: 4px; }
+    .msg-time { font-size: 0.69rem; color: rgba(26,26,46,0.3); margin-top: 0.3rem; padding: 0 0.25rem; }
+    .msg-row.user .msg-time { text-align: right; }
+    .translated-word { border-bottom: 1px dashed rgba(255,255,255,0.55); cursor: pointer; }
+    .translated-word.ai-bubble { border-bottom: 1px dashed rgba(26,26,46,0.35); }
+
+    /* TYPING */
+    .typing-indicator { display: flex; align-items: center; gap: 0.75rem; }
+    .typing-dots {
+      display: flex; gap: 4px; padding: 0.75rem 1rem;
+      background: #fff; border-radius: 16px;
+      border: 1px solid rgba(26,26,46,0.07); border-top-left-radius: 4px;
+    }
+    .typing-dots span { width: 7px; height: 7px; border-radius: 50%; background: rgba(26,26,46,0.2); animation: dot 1.2s infinite; }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dot { 0%,80%,100%{transform:scale(0.7);opacity:0.45;}40%{transform:scale(1);opacity:1;} }
+
+    /* CORRECTION CARD */
+    .correction-card {
+      background: rgba(212,168,67,0.07); border: 1px solid rgba(212,168,67,0.2);
+      border-radius: 12px; padding: 0.85rem 1rem;
+      font-size: 0.85rem; line-height: 1.52; color: var(--ink); max-width: 460px;
+    }
+    .correction-card-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: var(--gold); margin-bottom: 0.4rem; }
+
+    /* INPUT */
+    .input-area {
+      background: #fff; border-top: 1px solid rgba(26,26,46,0.08);
+      padding: 1rem 1.5rem 1.2rem; flex-shrink: 0;
+    }
+    .translate-hint { font-size: 0.74rem; color: rgba(26,26,46,0.38); margin-bottom: 0.6rem; }
+    .input-row { display: flex; align-items: flex-end; gap: 0.75rem; }
+    .chat-input {
+      flex: 1; padding: 0.78rem 1rem;
+      border: 1.5px solid rgba(26,26,46,0.1); border-radius: 12px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--ink);
+      background: var(--light); outline: none; resize: none; line-height: 1.5;
+      transition: border-color 0.2s;
+    }
+    .chat-input:focus { border-color: var(--terracotta); }
+    .send-btn {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--terracotta); color: #fff; border: none;
+      font-size: 1.1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background 0.2s, transform 0.15s;
+      box-shadow: 0 3px 10px rgba(196,98,45,0.25);
+    }
+    .send-btn:hover { background: #a8521f; transform: scale(1.05); }
+    .input-hint { font-size: 0.7rem; color: rgba(26,26,46,0.28); margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+
+<div id="chat-root" style="display:flex;flex-direction:column;height:100%;"></div>
+
+<script type="text/babel">
+  const { useState, useEffect, useRef, useCallback } = React;
+
+  const AI_RESPONSES = [
+    "Muy bien. Por favor, <span class='translated-word ai-bubble' title='follow'>sígame</span>. Su <span class='translated-word ai-bubble' title='table'>mesa</span> está por aquí.",
+    "¿Le puedo traer algo de <span class='translated-word ai-bubble' title='drink'>tomar</span> mientras revisa el menú?",
+    "Tenemos una selección de vinos excelentes hoy. ¿Le interesa ver nuestra <span class='translated-word ai-bubble' title='wine list'>carta de vinos</span>?",
+    "¡Excelente elección! ¿Y para el <span class='translated-word ai-bubble' title='main course'>plato principal</span>?",
+    "Muy bien. Su pedido estará listo en unos minutos. ¿Necesita algo más?",
+    "¡Que disfrute su <span class='translated-word ai-bubble' title='meal'>comida</span>! Si necesita algo, no dude en avisarme.",
+  ];
+
+  const CORRECTIONS = [
+    { label: '💡 Grammar note',  text: 'You used "para dos personas" — great! "Somos dos" sounds very natural too.' },
+    { label: '📝 Vocabulary tip', text: '"Reservación" is Latin American. In Spain you\'ll hear "reserva" instead.' },
+    { label: '🔍 Pragmatics',    text: 'Adding "por favor" at the end of requests sounds very polite in Spanish.' },
+  ];
+
+  // FIX: clean label map instead of brittle string includes() checks
+  const LEVEL_LABEL = {
+    beginner:     'Beginner',
+    intermediate: 'Intermediate',
+    advanced:     'Advanced',
+  };
+
+  const LEVEL_CODE = {
+    beginner:     'A1',
+    intermediate: 'B1',
+    advanced:     'C1',
+  };
+
+  function currentTime() {
+    return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function ChatApp() {
+    const [authUser,       setAuthUser]       = useState(null);
+    const [profile,        setProfile]        = useState(null);
+    const [messages,       setMessages]       = useState([{
+      id: 0, role: 'ai',
+      html: "¡Buenas tardes! Bienvenido al restaurante. ¿Tiene una <span class='translated-word ai-bubble' title='reservation'>reservación</span>?",
+      time: currentTime()
+    }]);
+    const [inputText,      setInputText]      = useState('');
+    const [isTyping,       setIsTyping]       = useState(false);
+    const [sessionSeconds, setSessionSeconds] = useState(0);
+    const [scenario,       setScenario]       = useState('Dining');
+    const [msgCount,       setMsgCount]       = useState(0);
+
+    const messagesEndRef = useRef(null);
+    const aiIndexRef     = useRef(0);
+    const corrIdxRef     = useRef(0);
+
+    useEffect(() => {
+      const unsub = window._fbOnAuth(window._firebaseAuth, async (user) => {
+        if (!user) { window.location.href = 'login.html'; return; }
+        setAuthUser(user);
+        try {
+          const snap = await window._fbGetDoc(window._fbDoc(window._firebaseDB, 'users', user.uid));
+          if (snap.exists()) setProfile(snap.data());
+        } catch (e) { console.error('Profile load error:', e); }
+      });
+      return () => unsub();
+    }, []);
+
+    useEffect(() => {
+      const interval = setInterval(() => setSessionSeconds(s => s + 1), 1000);
+      return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages, isTyping]);
+
+    const timerDisplay = `${String(Math.floor(sessionSeconds / 60)).padStart(2,'0')}:${String(sessionSeconds % 60).padStart(2,'0')}`;
+
+    const sendMessage = useCallback(async () => {
+      const text = inputText.trim();
+      if (!text) return;
+      const newCount = msgCount + 1;
+      setMessages(prev => [...prev, { id: Date.now(), role: 'user', html: text, time: currentTime() }]);
+      setInputText('');
+      setMsgCount(newCount);
+      setIsTyping(true);
+
+      setTimeout(() => {
+        setIsTyping(false);
+        const reply = AI_RESPONSES[aiIndexRef.current % AI_RESPONSES.length];
+        aiIndexRef.current++;
+        setMessages(prev => [...prev, { id: Date.now() + 1, role: 'ai', html: reply, time: currentTime() }]);
+
+        if (newCount % 3 === 0) {
+          const c = CORRECTIONS[corrIdxRef.current % CORRECTIONS.length];
+          corrIdxRef.current++;
+          setTimeout(() => {
+            setMessages(prev => [...prev, { id: Date.now() + 2, role: 'correction', label: c.label, html: c.text, time: currentTime() }]);
+          }, 400);
+        }
+      }, 1200 + Math.random() * 800);
+    }, [inputText, msgCount]);
+
+    async function endSession() {
+      if (!window.confirm('End this session and return to your dashboard?')) return;
+      if (authUser) {
+        try {
+          await window._fbAddDoc(window._fbCollection(window._firebaseDB, 'sessions', authUser.uid, 'records'), {
+            scenario,
+            date:         new Date().toISOString(),
+            duration:     `${Math.floor(sessionSeconds / 60)} min`,
+            messageCount: msgCount,
+            score:        Math.floor(65 + Math.random() * 30),
+            createdAt:    window._fbServerTS()
+          });
+          await window._fbUpdateDoc(window._fbDoc(window._firebaseDB, 'users', authUser.uid), {
+            sessionsTotal: window._fbIncrement(1)
+          });
+        } catch (err) {
+          console.error('Session save error:', err);
+        }
+      }
+      window.location.href = 'dashboard.html';
+    }
+
+    function changeScenario(newScenario) {
+      if (!window.confirm(`Switch to ${newScenario} scenario? Current conversation will be cleared.`)) return;
+      setScenario(newScenario);
+      setMessages([{ id: Date.now(), role: 'ai', html: '¡Hola! ¿De qué te gustaría hablar hoy?', time: currentTime() }]);
+      aiIndexRef.current = 0;
+      setMsgCount(0);
+    }
+
+    const firstName   = profile?.firstName || authUser?.displayName?.split(' ')[0] || 'J';
+    const userInitial = firstName.charAt(0).toUpperCase();
+    // FIX: use clean lookup map instead of level.includes('nter') etc.
+    const levelKey    = profile?.level || 'intermediate';
+    const levelLabel  = LEVEL_LABEL[levelKey] || levelKey;
+    const levelCode   = LEVEL_CODE[levelKey]  || '?';
+
+    return (
+      <>
+        <nav>
+          <a href="ilyas-landing.html" className="nav-logo">Usu <span>Loqui</span></a>
+          <div className="nav-center">
+            <span className="scenario-badge">🍽 {scenario} scenario</span>
+            <span className="level-pill">{levelLabel}</span>
+          </div>
+          <div className="nav-right">
+            <a href="dashboard.html"   className="nav-link">Dashboard</a>
+            <a href="progression.html" className="nav-link">Progress</a>
+            <button className="btn-end" onClick={endSession}>End Session</button>
+          </div>
+        </nav>
+
+        <div className="app-body">
+          <aside className="sidebar">
+            <div className="sidebar-section">
+              <div className="sidebar-label">Scenarios</div>
+              <div className="scenario-list">
+                {[
+                  ['🍽', 'Dining'],
+                  ['✈️', 'Travel'],
+                  ['💼', 'Business'],
+                  ['💬', 'Casual'],
+                  ['🎓', 'Academic'],
+                  ['🏠', 'Practical'],
+                ].map(([emoji, label]) => (
+                  <div
+                    key={label}
+                    className={`scenario-item ${scenario === label ? 'active' : ''}`}
+                    onClick={() => changeScenario(label)}
+                  >
+                    <span>{emoji}</span>{label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="sidebar-section">
+              <div className="sidebar-label">This Session</div>
+              <div className="sidebar-stats">
+                <div className="stat-mini"><span className="stat-mini-num">{timerDisplay}</span><div className="stat-mini-label">Time</div></div>
+                <div className="stat-mini"><span className="stat-mini-num">{msgCount}</span><div className="stat-mini-label">Messages</div></div>
+                {/* FIX: was level.includes('nter') ? 'B1' etc — now uses clean map */}
+                <div className="stat-mini"><span className="stat-mini-num">{levelCode}</span><div className="stat-mini-label">CEFR</div></div>
+                <div className="stat-mini"><span className="stat-mini-num">{profile?.streakDays || 0}</span><div className="stat-mini-label">Streak</div></div>
+              </div>
+            </div>
+
+            <div className="sidebar-section">
+              <div className="sidebar-label">Login Streak</div>
+              <div className="streak-box">
+                <div className="streak-number">🔥 {profile?.streakDays || 0}</div>
+                <div className="streak-label">days in a row</div>
+              </div>
+            </div>
+          </aside>
+
+          <div className="chat-area">
+            <div className="session-bar">
+              <span><span className="live-dot"></span> Session active</span>
+              <span>{timerDisplay}</span>
+              <span>{scenario} · {levelLabel}</span>
+            </div>
+
+            <div className="messages">
+              <div className="date-divider">Today</div>
+              {messages.map(msg => (
+                <MessageRow key={msg.id} msg={msg} userInitial={userInitial} />
+              ))}
+              {isTyping && (
+                <div className="msg-row typing-indicator">
+                  <div className="msg-avatar ai">U</div>
+                  <div className="typing-dots"><span></span><span></span><span></span></div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            <div className="input-area">
+              <div className="translate-hint">💡 Click any underlined word to see its translation.</div>
+              <div className="input-row">
+                <textarea
+                  className="chat-input"
+                  rows={1}
+                  placeholder="Escribe en español…"
+                  value={inputText}
+                  onChange={e => setInputText(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                />
+                <button className="send-btn" onClick={sendMessage}>➤</button>
+              </div>
+              <div className="input-hint">Enter to send · Shift+Enter for new line</div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  function MessageRow({ msg, userInitial }) {
+    function handleWordClick(e) {
+      if (e.target.classList.contains('translated-word')) {
+        const translation = e.target.getAttribute('title');
+        if (translation) alert(`Translation: "${translation}"`);
+      }
+    }
+
+    if (msg.role === 'correction') {
+      return (
+        <div className="msg-row" style={{ maxWidth:'540px' }}>
+          <div className="msg-avatar ai" style={{ background:'rgba(212,168,67,0.15)', color:'var(--gold)' }}>✎</div>
+          <div className="correction-card">
+            <div className="correction-card-label">{msg.label}</div>
+            <span dangerouslySetInnerHTML={{ __html: msg.html }} />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`msg-row ${msg.role}`}>
+        <div className={`msg-avatar ${msg.role}`}>{msg.role === 'ai' ? 'U' : userInitial}</div>
+        <div>
+          <div
+            className={`bubble ${msg.role}`}
+            dangerouslySetInnerHTML={{ __html: msg.html }}
+            onClick={handleWordClick}
+          />
+          <div className="msg-time">{msg.time}</div>
+        </div>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('chat-root')).render(<ChatApp />);
+</script>
+
+</body>
+</html>

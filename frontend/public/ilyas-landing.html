@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Usu Loqui — Practice Speaking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!--
+    FIX: The original file had TWO initializeApp calls — the modular CDN block plus
+    a stray copy-paste of npm-style imports (import { initializeApp } from "firebase/app")
+    which are NOT valid in a browser <script type="module"> using CDN URLs. Those imports
+    would throw a module resolution error at runtime. Removed the duplicate block entirely.
+    Also: `auth` was used in window._firebaseAuth but was never assigned — added getAuth().
+    Also: getAnalytics was imported but the CDN module path was wrong; removed it (not needed here).
+  -->
+  <script type="module">
+    import { initializeApp }      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyB-__m7BPGPdLu8uwg5Z2xtCUb8cGT7stA",
+      authDomain:        "uso-loqi-f4305.firebaseapp.com",
+      projectId:         "uso-loqi-f4305",
+      storageBucket:     "uso-loqi-f4305.firebasestorage.app",
+      messagingSenderId: "54174701224",
+      appId:             "1:54174701224:web:2ef0fa9119c688f944149d",
+      measurementId:     "G-S534KMVVXG"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app); // FIX: auth was missing — getAuth() was never called
+
+    window._firebaseAuth = auth;
+    window._fbOnAuth     = onAuthStateChanged;
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #F5F0E8; --ink: #1A1A2E; --terracotta: #C4622D;
+      --gold: #D4A843; --sage: #7A9E7E; --light: #FAF8F3;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--light); color: var(--ink); overflow-x: hidden; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 6%;
+      background: rgba(250,248,243,0.95); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(26,26,46,0.08);
+      transition: box-shadow 0.3s;
+    }
+    nav.scrolled { box-shadow: 0 4px 24px rgba(26,26,46,0.07); }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--ink); text-decoration: none; letter-spacing: -0.01em; }
+    .nav-logo span { color: var(--terracotta); font-style: italic; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+    .nav-links a { text-decoration: none; color: var(--ink); font-size: 0.88rem; font-weight: 400; opacity: 0.65; transition: opacity 0.2s; }
+    .nav-links a:hover { opacity: 1; }
+    .btn-nav {
+      background: var(--terracotta) !important; color: #fff !important; opacity: 1 !important;
+      padding: 0.5rem 1.4rem; border-radius: 50px; font-weight: 500 !important; font-size: 0.88rem !important;
+      transition: background 0.2s, transform 0.15s !important; text-decoration: none;
+    }
+    .btn-nav:hover { background: #a8521f !important; transform: translateY(-1px) !important; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: grid; grid-template-columns: 1fr 1fr;
+      align-items: center; gap: 4rem;
+      padding: 9rem 6% 5rem;
+      background: var(--cream);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -120px; right: -80px;
+      width: 560px; height: 560px;
+      background: radial-gradient(circle, rgba(196,98,45,0.13) 0%, transparent 68%);
+      border-radius: 50%;
+    }
+    .hero::after {
+      content: ''; position: absolute; bottom: -100px; left: 8%;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(122,158,126,0.16) 0%, transparent 68%);
+      border-radius: 50%;
+    }
+    .hero-text { position: relative; z-index: 2; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--terracotta); font-weight: 600; margin-bottom: 1.2rem;
+      background: rgba(196,98,45,0.08); border: 1px solid rgba(196,98,45,0.2);
+      padding: 0.3rem 0.9rem; border-radius: 50px;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.6rem, 4.5vw, 4rem);
+      line-height: 1.15; margin-bottom: 1.5rem; color: var(--ink);
+    }
+    .hero h1 em { color: var(--terracotta); font-style: italic; }
+    .hero-sub {
+      font-size: 1.02rem; line-height: 1.75; color: rgba(26,26,46,0.62);
+      max-width: 460px; margin-bottom: 2.5rem;
+    }
+    .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+    .btn-primary {
+      background: var(--terracotta); color: #fff;
+      padding: 0.9rem 2.1rem; border-radius: 50px;
+      text-decoration: none; font-weight: 500; font-size: 0.95rem;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      display: inline-block; box-shadow: 0 4px 16px rgba(196,98,45,0.3);
+    }
+    .btn-primary:hover { background: #a8521f; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(196,98,45,0.35); }
+    .btn-secondary {
+      background: transparent; color: var(--ink);
+      padding: 0.9rem 2.1rem; border-radius: 50px;
+      text-decoration: none; font-weight: 500; font-size: 0.95rem;
+      border: 1.5px solid rgba(26,26,46,0.22);
+      transition: border-color 0.2s, transform 0.15s; display: inline-block;
+    }
+    .btn-secondary:hover { border-color: var(--ink); transform: translateY(-2px); }
+
+    /* HERO VISUAL */
+    .hero-visual { position: relative; z-index: 2; }
+    .chat-card {
+      background: #fff; border-radius: 22px; padding: 1.6rem;
+      box-shadow: 0 24px 64px rgba(26,26,46,0.13);
+      max-width: 420px; margin-left: auto;
+      animation: floatCard 4s ease-in-out infinite;
+    }
+    @keyframes floatCard {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .chat-card-header {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 1.4rem; padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(26,26,46,0.07);
+    }
+    .chat-avatar {
+      width: 38px; height: 38px; background: var(--ink); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Playfair Display', serif; color: #fff; font-size: 0.95rem;
+    }
+    .chat-header-info strong { display: block; font-size: 0.9rem; }
+    .chat-header-info span { font-size: 0.74rem; color: rgba(26,26,46,0.45); }
+    .online-dot {
+      width: 8px; height: 8px; background: var(--sage); border-radius: 50%;
+      margin-left: auto; animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.35;} }
+    .chat-messages { display: flex; flex-direction: column; gap: 0.85rem; }
+    .chat-msg {
+      padding: 0.72rem 1rem; border-radius: 14px;
+      font-size: 0.87rem; line-height: 1.52; max-width: 88%;
+    }
+    .chat-msg.ai { background: var(--cream); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .chat-msg.user { background: var(--terracotta); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .chat-msg .word { border-bottom: 1px dashed rgba(26,26,46,0.3); cursor: pointer; }
+    .correction-box {
+      background: rgba(212,168,67,0.07); border: 1px solid rgba(212,168,67,0.25);
+      border-radius: 10px; padding: 0.75rem 1rem;
+      font-size: 0.82rem; line-height: 1.52;
+    }
+    .correction-label {
+      font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--gold); margin-bottom: 0.3rem;
+    }
+
+    /* STATS BAR */
+    .stats-bar {
+      display: flex; justify-content: space-around; flex-wrap: wrap;
+      gap: 1rem; padding: 2.5rem 6%;
+      background: #fff;
+      border-top: 1px solid rgba(26,26,46,0.07);
+      border-bottom: 1px solid rgba(26,26,46,0.07);
+    }
+    .stat { text-align: center; }
+    .stat-number {
+      font-family: 'Playfair Display', serif; font-size: 2.4rem;
+      color: var(--terracotta); display: block; line-height: 1;
+    }
+    .stat-label { font-size: 0.8rem; color: rgba(26,26,46,0.5); margin-top: 0.3rem; }
+
+    /* FEATURES */
+    .features { padding: 6rem 6%; background: var(--cream); }
+    .section-tag {
+      display: inline-block; font-size: 0.72rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.15em; color: var(--terracotta);
+      margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      margin-bottom: 1rem; line-height: 1.2;
+    }
+    .section-sub {
+      font-size: 1rem; color: rgba(26,26,46,0.6);
+      max-width: 540px; margin: 0 auto 3.5rem; line-height: 1.75;
+    }
+    .section-header { text-align: center; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .feature-card {
+      background: #fff; border-radius: 18px; padding: 2rem;
+      border: 1px solid rgba(26,26,46,0.07);
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(26,26,46,0.09); }
+    .feature-icon {
+      width: 46px; height: 46px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 1.2rem;
+    }
+    .feature-card h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 0.6rem; }
+    .feature-card p { font-size: 0.87rem; color: rgba(26,26,46,0.6); line-height: 1.68; }
+
+    /* HOW IT WORKS */
+    .how { padding: 6rem 6%; background: var(--light); }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2rem; margin-top: 0.5rem; }
+    .step { padding: 1.5rem; position: relative; }
+    .step::after {
+      content: '→'; position: absolute; right: -1rem; top: 2rem;
+      font-size: 1.2rem; color: rgba(26,26,46,0.15);
+    }
+    .step:last-child::after { display: none; }
+    .step-number {
+      font-family: 'Playfair Display', serif; font-size: 3.5rem;
+      color: rgba(196,98,45,0.12); line-height: 1; margin-bottom: 0.75rem; font-weight: 700;
+    }
+    .step h4 { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .step p { font-size: 0.87rem; color: rgba(26,26,46,0.6); line-height: 1.68; }
+
+    /* LEVELS */
+    .levels { padding: 6rem 6%; background: var(--cream); }
+    .levels-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 0.5rem; }
+    .level-card { border-radius: 18px; padding: 2.1rem; border: 1px solid rgba(26,26,46,0.08); transition: transform 0.2s; }
+    .level-card:hover { transform: translateY(-3px); }
+    .level-card.beginner { background: rgba(122,158,126,0.07); }
+    .level-card.intermediate { background: rgba(212,168,67,0.07); }
+    .level-card.advanced { background: rgba(196,98,45,0.07); }
+    .level-badge {
+      display: inline-block; padding: 0.3rem 0.9rem; border-radius: 50px;
+      font-size: 0.75rem; font-weight: 600; margin-bottom: 1.1rem; letter-spacing: 0.03em;
+    }
+    .beginner .level-badge { background: rgba(122,158,126,0.18); color: #2e6635; }
+    .intermediate .level-badge { background: rgba(212,168,67,0.18); color: #7a5c0e; }
+    .advanced .level-badge { background: rgba(196,98,45,0.18); color: var(--terracotta); }
+    .level-card h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: 0.6rem; }
+    .level-card p { font-size: 0.87rem; color: rgba(26,26,46,0.65); line-height: 1.68; margin-bottom: 1rem; }
+    .level-cefr { font-size: 0.78rem; font-weight: 600; opacity: 0.45; letter-spacing: 0.04em; }
+
+    /* CTA */
+    .cta-section {
+      padding: 7rem 6%; background: var(--ink);
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(196,98,45,0.14) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .cta-section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3.2rem); color: #fff;
+      margin-bottom: 1rem; position: relative; z-index: 2;
+    }
+    .cta-section h2 em { color: var(--gold); font-style: italic; }
+    .cta-section p {
+      font-size: 1rem; color: rgba(255,255,255,0.58);
+      max-width: 480px; margin: 0 auto 2.5rem; line-height: 1.75;
+      position: relative; z-index: 2;
+    }
+    .cta-section .btn-primary { position: relative; z-index: 2; }
+
+    /* FOOTER */
+    footer {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem; padding: 2rem 6%;
+      background: var(--ink); border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .footer-logo { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: #fff; }
+    .footer-logo span { color: var(--terracotta); font-style: italic; }
+    footer p { font-size: 0.8rem; color: rgba(255,255,255,0.32); }
+
+    @media (max-width: 768px) {
+      .hero { grid-template-columns: 1fr; padding: 7rem 5% 3rem; }
+      .hero-visual { display: none; }
+      .nav-links { gap: 1rem; }
+      .nav-links li:not(:last-child) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav id="main-nav">
+  <a href="ilyas-landing.html" class="nav-logo">Usu <span>Loqui</span></a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#levels">Levels</a></li>
+    <li><a href="progression.html">My Progress</a></li>
+    <li><div id="nav-cta-root"></div></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-text">
+    <p class="hero-eyebrow">✦ AI-Powered Language Learning</p>
+    <h1>Speak Spanish with <em>confidence</em>, starting today.</h1>
+    <p class="hero-sub">Practice real conversations with an AI tutor that adapts to your level, corrects your mistakes in context, and tracks your growth — session by session.</p>
+    <div class="hero-cta">
+      <div id="hero-cta-root"></div>
+      <a href="#how" class="btn-secondary">See how it works →</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="chat-card">
+      <div class="chat-card-header">
+        <div class="chat-avatar">U</div>
+        <div class="chat-header-info">
+          <strong>Usu Loqui AI</strong>
+          <span>Dining scenario · Intermediate</span>
+        </div>
+        <div class="online-dot"></div>
+      </div>
+      <div class="chat-messages">
+        <div class="chat-msg ai">¡Buenas tardes! ¿Tiene una <span class="word">reservación</span>?</div>
+        <div class="chat-msg user">Sí, tengo una reservación para dos personas.</div>
+        <div class="chat-msg ai">¡Perfecto! ¿A nombre de quién está la reservación?</div>
+        <div class="correction-box">
+          <div class="correction-label">💡 Grammar note</div>
+          You used <strong>"para dos personas"</strong> correctly — you could also say <strong>"somos dos"</strong> for a more natural flow.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="stats-bar">
+  <div class="stat"><span class="stat-number">3s</span><div class="stat-label">AI response time</div></div>
+  <div class="stat"><span class="stat-number">6</span><div class="stat-label">Conversation scenarios</div></div>
+  <div class="stat"><span class="stat-number">3</span><div class="stat-label">Proficiency levels</div></div>
+  <div class="stat"><span class="stat-number">A1–C2</span><div class="stat-label">CEFR-aligned tracking</div></div>
+</div>
+
+<section class="features" id="features">
+  <div class="section-header">
+    <span class="section-tag">What you get</span>
+    <h2 class="section-title">Everything you need to improve</h2>
+    <p class="section-sub">Usu Loqui combines conversational AI with deep learning analytics to make every practice session count.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(196,98,45,0.1);">🗣</div>
+      <h3>Freeform Conversations</h3>
+      <p>Chat naturally in Spanish without scripts. The AI adapts its vocabulary and complexity to your current proficiency level.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(122,158,126,0.1);">📊</div>
+      <h3>Progress Analytics</h3>
+      <p>Track your error rate, vocabulary growth, sentence complexity, and more with visual dashboards after every session.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(212,168,67,0.1);">📋</div>
+      <h3>Conversation History</h3>
+      <p>Every chat is saved and annotated. Review past conversations with corrections highlighted and vocabulary marked.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(196,98,45,0.1);">🔍</div>
+      <h3>NLP Error Detection</h3>
+      <p>Grammar, semantics, and pragmatics are all analyzed. Get detailed feedback reports after each conversation ends.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(122,158,126,0.1);">🎭</div>
+      <h3>Scenario Practice</h3>
+      <p>Choose from dining, travel, business, casual, academic, and practical scenarios to practice real-world Spanish.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(212,168,67,0.1);">⚡</div>
+      <h3>Instant Translation</h3>
+      <p>Tap any word or phrase during a conversation to get an instant translation without breaking the flow.</p>
+    </div>
+  </div>
+</section>
+
+<section class="how" id="how">
+  <div class="section-header">
+    <span class="section-tag">The process</span>
+    <h2 class="section-title">How it works</h2>
+    <p class="section-sub">Get from sign-up to your first real Spanish conversation in under five minutes.</p>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="step-number">01</div><h4>Create your account</h4><p>Sign up with your email and set your Spanish proficiency level to personalize your experience.</p></div>
+    <div class="step"><div class="step-number">02</div><h4>Pick a scenario</h4><p>Choose from dining, travel, business and more — or just start a free-form casual chat.</p></div>
+    <div class="step"><div class="step-number">03</div><h4>Have a conversation</h4><p>Chat naturally in Spanish. The AI responds, adjusts difficulty, and keeps the dialogue flowing.</p></div>
+    <div class="step"><div class="step-number">04</div><h4>Review your feedback</h4><p>After each session, see your annotated transcript and a breakdown of what to work on next.</p></div>
+  </div>
+</section>
+
+<section class="levels" id="levels">
+  <div class="section-header">
+    <span class="section-tag">Proficiency</span>
+    <h2 class="section-title">Your level, your pace</h2>
+    <p class="section-sub">Usu Loqui dynamically adjusts difficulty and tracks your progress against internationally recognized CEFR benchmarks.</p>
+  </div>
+  <div class="levels-grid">
+    <div class="level-card beginner">
+      <span class="level-badge">Beginner</span>
+      <h3>Building the foundation</h3>
+      <p>Shorter sentences, common vocabulary, and slower pacing. The AI is patient and keeps corrections gentle and encouraging.</p>
+      <div class="level-cefr">CEFR: A1 — A2</div>
+    </div>
+    <div class="level-card intermediate">
+      <span class="level-badge">Intermediate</span>
+      <h3>Growing your fluency</h3>
+      <p>Full sentences, varied tenses, and idiomatic expressions. The AI challenges you to stretch without overwhelming.</p>
+      <div class="level-cefr">CEFR: B1 — B2</div>
+    </div>
+    <div class="level-card advanced">
+      <span class="level-badge">Advanced</span>
+      <h3>Mastering the nuance</h3>
+      <p>Complex grammar, cultural register, and subtle pragmatics. Conversations feel like talking with a native speaker.</p>
+      <div class="level-cefr">CEFR: C1 — C2</div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <h2>Ready to start <em>speaking</em>?</h2>
+  <p>Join Usu Loqui and practice Spanish the way it was meant to be — through real, adaptive conversation.</p>
+  <div id="cta-section-root"></div>
+</section>
+
+<footer>
+  <div class="footer-logo">Usu <span>Loqui</span></div>
+  <p>CSCI-C 465 · Spring 2026 · Khamliche, Roper, Brown, Colon</p>
+  <p>© 2026 Usu Loqui. All rights reserved.</p>
+</footer>
+
+<script type="text/babel">
+  const { useState, useEffect } = React;
+
+  function AuthCTA({ variant }) {
+    const [loggedIn, setLoggedIn] = useState(null);
+
+    useEffect(() => {
+      const unsub = window._fbOnAuth(window._firebaseAuth, (user) => {
+        setLoggedIn(!!user);
+      });
+      return () => unsub();
+    }, []);
+
+    if (loggedIn === null) return null;
+
+    const href      = loggedIn ? 'dashboard.html' : 'login.html';
+    const label     = loggedIn
+      ? (variant === 'nav' ? 'Dashboard' : 'Go to Dashboard')
+      : (variant === 'cta' ? 'Create your free account' : variant === 'nav' ? 'Get Started' : 'Start for free');
+    const className = variant === 'nav' ? 'btn-nav' : 'btn-primary';
+
+    return <a href={href} className={className}>{label}</a>;
+  }
+
+  ['nav-cta-root', 'hero-cta-root', 'cta-section-root'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (el) ReactDOM.createRoot(el).render(<AuthCTA variant={i === 0 ? 'nav' : i === 2 ? 'cta' : 'hero'} />);
+  });
+
+  // Sticky nav shadow on scroll
+  window.addEventListener('scroll', () => {
+    document.getElementById('main-nav')?.classList.toggle('scrolled', window.scrollY > 20);
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Usu Loqui — My Progression</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="module">
+    import { initializeApp }      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc,
+      collection, query, orderBy, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyB-__m7BPGPdLu8uwg5Z2xtCUb8cGT7stA",
+      authDomain:        "uso-loqi-f4305.firebaseapp.com",
+      projectId:         "uso-loqi-f4305",
+      storageBucket:     "uso-loqi-f4305.firebasestorage.app",
+      messagingSenderId: "54174701224",
+      appId:             "1:54174701224:web:2ef0fa9119c688f944149d",
+      measurementId:     "G-S534KMVVXG"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    window._firebaseAuth = auth;
+    window._firebaseDB   = db;
+    window._fbOnAuth     = onAuthStateChanged;
+    window._fbSignOut    = signOut;
+    window._fbDoc        = doc;
+    window._fbGetDoc     = getDoc;
+    window._fbCollection = collection;
+    window._fbQuery      = query;
+    window._fbOrderBy    = orderBy;
+    window._fbGetDocs    = getDocs;
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #F5F0E8; --ink: #1A1A2E; --terracotta: #C4622D;
+      --gold: #D4A843; --sage: #7A9E7E; --light: #FAF8F3;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--light); color: var(--ink); min-height: 100vh; }
+
+    /* NAV */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem 2.5rem;
+      background: rgba(250,248,243,0.97); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(26,26,46,0.08);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--ink); text-decoration: none; }
+    .nav-logo span { color: var(--terracotta); font-style: italic; }
+    .nav-links { display: flex; gap: 1.5rem; list-style: none; align-items: center; }
+    .nav-links a { text-decoration: none; font-size: 0.87rem; color: rgba(26,26,46,0.55); transition: color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--ink); font-weight: 500; }
+    .btn-chat {
+      padding: 0.45rem 1.2rem; border-radius: 50px;
+      background: var(--terracotta); color: #fff; text-decoration: none;
+      font-size: 0.85rem; font-weight: 500; transition: background 0.2s;
+    }
+    .btn-chat:hover { background: #a8521f; color: #fff; }
+    .btn-signout {
+      padding: 0.45rem 1.2rem; border-radius: 50px; background: transparent;
+      color: rgba(26,26,46,0.55); border: 1px solid rgba(26,26,46,0.18);
+      font-size: 0.85rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+    }
+    .btn-signout:hover { background: rgba(26,26,46,0.05); color: var(--ink); }
+
+    /* PAGE */
+    .page { max-width: 1100px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+
+    /* PAGE HEADER */
+    .page-header { margin-bottom: 3rem; }
+    .page-eyebrow {
+      font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.15em; color: var(--terracotta); margin-bottom: 0.5rem;
+    }
+    .page-header h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; margin-bottom: 0.4rem; }
+    .page-header p { font-size: 0.9rem; color: rgba(26,26,46,0.5); }
+
+    /* CEFR JOURNEY BANNER */
+    .journey-banner {
+      background: var(--ink); border-radius: 20px; padding: 2.5rem 2.5rem 2rem;
+      margin-bottom: 2rem; position: relative; overflow: hidden;
+    }
+    .journey-banner::before {
+      content: ''; position: absolute; top: -80px; right: -80px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(196,98,45,0.2) 0%, transparent 65%);
+      border-radius: 50%;
+    }
+    .journey-banner::after {
+      content: ''; position: absolute; bottom: -60px; left: 20%;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(122,158,126,0.15) 0%, transparent 65%);
+      border-radius: 50%;
+    }
+    .banner-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 2rem; position: relative; z-index: 2; flex-wrap: wrap; gap: 1rem;
+    }
+    .banner-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #fff; margin-bottom: 0.3rem; }
+    .banner-sub { font-size: 0.84rem; color: rgba(255,255,255,0.5); }
+    .current-level-chip {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 50px; padding: 0.5rem 1.3rem; color: #fff;
+      font-family: 'Playfair Display', serif; font-size: 1rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .current-level-chip span { font-size: 0.72rem; opacity: 0.55; font-family: 'DM Sans', sans-serif; }
+
+    /* CEFR TRACK */
+    .cefr-track { display: flex; align-items: center; gap: 0; position: relative; z-index: 2; }
+    .cefr-node-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .cefr-connector {
+      flex: 1; height: 3px; background: rgba(255,255,255,0.1); margin-top: -18px;
+      position: relative; overflow: hidden;
+    }
+    .cefr-connector.done { background: rgba(196,98,45,0.5); }
+    .cefr-connector.active-fill { background: linear-gradient(90deg, rgba(196,98,45,0.5), rgba(196,98,45,0.1)); }
+    .cefr-node {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 700; margin-bottom: 0.5rem;
+      transition: transform 0.2s;
+    }
+    .cefr-node:hover { transform: scale(1.1); }
+    .cefr-node.done    { background: var(--terracotta); color: #fff; box-shadow: 0 0 0 3px rgba(196,98,45,0.3); }
+    .cefr-node.current { background: var(--gold); color: var(--ink); box-shadow: 0 0 0 4px rgba(212,168,67,0.35); animation: currentPulse 2.5s ease-in-out infinite; }
+    .cefr-node.locked  { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.3); border: 2px dashed rgba(255,255,255,0.15); }
+    @keyframes currentPulse {
+      0%, 100% { box-shadow: 0 0 0 4px rgba(212,168,67,0.35); }
+      50%       { box-shadow: 0 0 0 8px rgba(212,168,67,0.15); }
+    }
+    .cefr-label { font-size: 0.72rem; color: rgba(255,255,255,0.5); text-align: center; }
+    .cefr-label.current { color: var(--gold); font-weight: 600; }
+    .cefr-label.done { color: rgba(255,255,255,0.7); }
+
+    /* LEVEL PROGRESS WITHIN NODE */
+    .xp-bar-wrap { width: 100%; margin-top: 1.5rem; padding: 0 0.5rem; position: relative; z-index: 2; }
+    .xp-bar-label { display: flex; justify-content: space-between; font-size: 0.73rem; color: rgba(255,255,255,0.45); margin-bottom: 0.4rem; }
+    .xp-bar-label span:last-child { color: var(--gold); font-weight: 600; }
+    .xp-track { height: 6px; background: rgba(255,255,255,0.1); border-radius: 50px; overflow: hidden; }
+    .xp-fill  { height: 100%; background: linear-gradient(90deg, var(--terracotta), var(--gold)); border-radius: 50px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+    /* SKILL TRACKS */
+    .section-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 0.25rem; }
+    .section-sub   { font-size: 0.83rem; color: rgba(26,26,46,0.45); margin-bottom: 1.5rem; }
+
+    .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.2rem; margin-bottom: 2.5rem; }
+    .skill-card {
+      background: #fff; border-radius: 16px; padding: 1.4rem 1.5rem;
+      border: 1px solid rgba(26,26,46,0.07); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .skill-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,26,46,0.07); }
+    .skill-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    .skill-name { display: flex; align-items: center; gap: 0.6rem; font-weight: 500; font-size: 0.9rem; }
+    .skill-icon { font-size: 1.2rem; }
+    .skill-pct { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--ink); }
+    .skill-track { height: 8px; background: var(--cream); border-radius: 50px; overflow: hidden; margin-bottom: 0.55rem; }
+    .skill-fill  { height: 100%; border-radius: 50px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+    .skill-sub { font-size: 0.76rem; color: rgba(26,26,46,0.4); }
+    .skill-badge {
+      display: inline-block; padding: 0.2rem 0.6rem; border-radius: 50px;
+      font-size: 0.68rem; font-weight: 600; margin-left: 0.4rem;
+    }
+    .badge-up   { background: rgba(122,158,126,0.12); color: #2e6635; }
+    .badge-down { background: rgba(196,98,45,0.1);  color: var(--terracotta); }
+    .badge-flat { background: rgba(26,26,46,0.07);  color: rgba(26,26,46,0.55); }
+
+    /* SCORE TREND CHART */
+    .trend-card {
+      background: #fff; border-radius: 16px; padding: 1.5rem;
+      border: 1px solid rgba(26,26,46,0.07); margin-bottom: 2rem;
+    }
+    .chart-wrap { position: relative; height: 140px; margin: 1rem 0 0.5rem; }
+    .chart-svg { width: 100%; height: 100%; overflow: visible; }
+    .chart-grid-line { stroke: rgba(26,26,46,0.06); stroke-width: 1; }
+    .chart-line { fill: none; stroke: var(--terracotta); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-area { fill: url(#areaGrad); }
+    .chart-dot { fill: #fff; stroke: var(--terracotta); stroke-width: 2.5; transition: r 0.15s; cursor: pointer; }
+    .chart-dot:hover { r: 6; }
+    .chart-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: rgba(26,26,46,0.38); padding: 0 2px; }
+
+    /* MILESTONES */
+    .milestones-section { margin-bottom: 2.5rem; }
+    .milestone-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .milestone-row {
+      display: flex; align-items: center; gap: 1rem;
+      background: #fff; border-radius: 14px; padding: 1rem 1.2rem;
+      border: 1px solid rgba(26,26,46,0.07); transition: transform 0.2s;
+    }
+    .milestone-row:hover { transform: translateX(3px); }
+    .milestone-icon {
+      width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+    }
+    .milestone-icon.done    { background: rgba(122,158,126,0.1); }
+    .milestone-icon.locked  { background: rgba(26,26,46,0.04); filter: grayscale(1); opacity: 0.4; }
+    .milestone-content { flex: 1; }
+    .milestone-name { font-weight: 500; font-size: 0.9rem; margin-bottom: 0.2rem; }
+    .milestone-desc { font-size: 0.79rem; color: rgba(26,26,46,0.48); }
+    .milestone-date { font-size: 0.75rem; color: rgba(26,26,46,0.35); flex-shrink: 0; }
+    .milestone-check {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+    }
+    .milestone-check.done   { background: var(--sage); color: #fff; }
+    .milestone-check.locked { background: rgba(26,26,46,0.07); color: rgba(26,26,46,0.3); }
+
+    /* VOCAB GROWTH */
+    .vocab-card {
+      background: var(--ink); border-radius: 16px; padding: 1.5rem;
+      margin-bottom: 2rem; position: relative; overflow: hidden;
+    }
+    .vocab-card::before {
+      content: ''; position: absolute; top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(212,168,67,0.15) 0%, transparent 65%);
+      border-radius: 50%;
+    }
+    .vocab-title { font-family: 'Playfair Display', serif; color: #fff; font-size: 1.1rem; margin-bottom: 0.25rem; position: relative; z-index: 2; }
+    .vocab-sub   { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-bottom: 1.5rem; position: relative; z-index: 2; }
+    .vocab-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; position: relative; z-index: 2; }
+    .vocab-chip {
+      padding: 0.35rem 0.85rem; border-radius: 50px; font-size: 0.82rem;
+      border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.75);
+      transition: all 0.2s; cursor: default;
+    }
+    .vocab-chip:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .vocab-chip.new { border-color: rgba(212,168,67,0.4); color: var(--gold); }
+    .vocab-chip.mastered { border-color: rgba(122,158,126,0.35); color: #7ecf85; }
+
+    .loading-state { text-align: center; padding: 5rem; color: rgba(26,26,46,0.4); font-size: 0.9rem; }
+
+    @media (max-width: 768px) {
+      .skills-grid { grid-template-columns: 1fr; }
+      .cefr-label { font-size: 0.64rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="progression-root"></div>
+
+<script type="text/babel">
+  const { useState, useEffect, useRef } = React;
+
+  // CEFR levels in order
+  const CEFR_LEVELS = ['A1','A2','B1','B2','C1','C2'];
+
+  // Map profile.level to a CEFR level
+  const LEVEL_TO_CEFR = {
+    beginner:     'A2',  // A1 done, currently at A2
+    intermediate: 'B1',
+    advanced:     'C1',
+  };
+
+  // Sample score history (real app would load from Firestore sessions)
+  const SAMPLE_SCORES = [62, 68, 65, 71, 74, 70, 76, 79, 75, 82, 84, 88];
+
+  // Skills config
+  function buildSkills(levelKey) {
+    const isAdv = levelKey === 'advanced';
+    const isBeg = levelKey === 'beginner';
+    return [
+      { icon:'📝', name:'Grammar',         pct: isAdv ? 78 : isBeg ? 45 : 61, color:'var(--terracotta)', trend:'up',   sub:'Verb tenses, agreement, sentence structure' },
+      { icon:'💬', name:'Fluency',          pct: isAdv ? 82 : isBeg ? 40 : 68, color:'var(--sage)',       trend:'up',   sub:'Response speed and naturalness' },
+      { icon:'📚', name:'Vocabulary',       pct: isAdv ? 71 : isBeg ? 55 : 64, color:'var(--gold)',       trend:'flat', sub:'Range and accuracy of word use' },
+      { icon:'👂', name:'Comprehension',    pct: isAdv ? 88 : isBeg ? 60 : 74, color:'var(--sage)',       trend:'up',   sub:'Understanding context and nuance' },
+      { icon:'🗣', name:'Pronunciation',    pct: isAdv ? 65 : isBeg ? 48 : 57, color:'var(--gold)',       trend:'down', sub:'Vowel clarity and stress patterns' },
+      { icon:'🎭', name:'Pragmatics',       pct: isAdv ? 60 : isBeg ? 30 : 48, color:'var(--terracotta)', trend:'up',   sub:'Cultural register and politeness' },
+    ];
+  }
+
+  // Milestones config
+  function buildMilestones(levelKey) {
+    const all = [
+      { icon:'🎉', name:'First Conversation', desc:'Completed your very first practice session', date:'Mar 12', done: true },
+      { icon:'🔥', name:'7-Day Streak',        desc:'Practiced 7 days in a row without missing', date:'Mar 19', done: true },
+      { icon:'💬', name:'100 Messages Sent',   desc:'Exchanged 100 messages with the AI tutor',  date:'Mar 25', done: true },
+      { icon:'📖', name:'Vocab Builder 50',    desc:'Used 50 unique Spanish words across sessions', date:'Apr 2', done: levelKey !== 'beginner' },
+      { icon:'⭐', name:'Score 80+',           desc:'Achieved 80% or higher accuracy in a session', date:'Apr 10', done: levelKey === 'advanced' },
+      { icon:'🏆', name:'Level Up',            desc:'Progressed to the next CEFR proficiency level', date:'—', done: levelKey === 'advanced' },
+      { icon:'🎓', name:'Grammar Mastery',     desc:'Reduced grammar error rate below 20%', date:'—', done: false },
+      { icon:'🌟', name:'30-Day Streak',       desc:'Keep practicing every day for 30 days', date:'—', done: false },
+    ];
+    return all;
+  }
+
+  // Vocab words per level
+  function buildVocab(levelKey) {
+    const base = ['tengo','reservación','gracias','por favor','¿puede?','quiero','necesito','dónde','cómo','buenas'];
+    const mid  = ['subjuntivo','aunque','sin embargo','a pesar de','quizás','hubiera','mientras','ojala'];
+    const adv  = ['índole','coyuntura','asimismo','incumbir','cabe destacar','por ende','no obstante'];
+    if (levelKey === 'beginner')     return { mastered: base.slice(0,6), recent: base.slice(6) };
+    if (levelKey === 'intermediate') return { mastered: [...base, ...mid.slice(0,4)], recent: mid.slice(4) };
+    return { mastered: [...base, ...mid, ...adv.slice(0,4)], recent: adv.slice(4) };
+  }
+
+  function ProgressionApp() {
+    const [authUser, setAuthUser] = useState(null);
+    const [profile,  setProfile]  = useState(null);
+    const [sessions, setSessions] = useState([]);
+    const [loading,  setLoading]  = useState(true);
+    const [animIn,   setAnimIn]   = useState(false);
+
+    useEffect(() => {
+      const unsubscribe = window._fbOnAuth(window._firebaseAuth, async (user) => {
+        if (!user) { window.location.href = 'login.html'; return; }
+        setAuthUser(user);
+        try {
+          const snap = await window._fbGetDoc(window._fbDoc(window._firebaseDB, 'users', user.uid));
+          if (snap.exists()) setProfile(snap.data());
+
+          const q = window._fbQuery(
+            window._fbCollection(window._firebaseDB, 'sessions', user.uid, 'records'),
+            window._fbOrderBy('date', 'desc')
+          );
+          const sSnap = await window._fbGetDocs(q);
+          setSessions(sSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        } catch (err) {
+          console.error('Firestore load error:', err);
+        } finally {
+          setLoading(false);
+          setTimeout(() => setAnimIn(true), 50);
+        }
+      });
+      return () => unsubscribe();
+    }, []);
+
+    async function handleSignOut() {
+      await window._fbSignOut(window._firebaseAuth);
+      window.location.href = 'login.html';
+    }
+
+    if (loading) return <div className="loading-state"><p>Loading your progression…</p></div>;
+
+    const firstName  = profile?.firstName || authUser?.displayName?.split(' ')[0] || 'Learner';
+    const levelKey   = profile?.level || 'intermediate';
+    const currentCEFR = LEVEL_TO_CEFR[levelKey] || 'B1';
+    const currentIdx  = CEFR_LEVELS.indexOf(currentCEFR);
+
+    // XP within current level: use sessions count as proxy
+    const sessionCount = profile?.sessionsTotal || sessions.length;
+    const xpPct = Math.min(95, 20 + sessionCount * 4); // caps at 95% so there's always room to grow
+
+    const skills     = buildSkills(levelKey);
+    const milestones = buildMilestones(levelKey);
+    const vocab      = buildVocab(levelKey);
+
+    // Build score series: real sessions + fill with sample if too few
+    const rawScores = sessions.slice(0, 12).map(s => s.score).filter(Boolean).reverse();
+    const scoreData = rawScores.length >= 4 ? rawScores : SAMPLE_SCORES;
+
+    const LEVEL_LABELS = {
+      beginner:     'Beginner',
+      intermediate: 'Intermediate',
+      advanced:     'Advanced',
+    };
+
+    return (
+      <>
+        <nav>
+          <a href="ilyas-landing.html" className="nav-logo">Usu <span>Loqui</span></a>
+          <ul className="nav-links">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="progression.html" className="active">My Progress</a></li>
+            <li><a href="chat.html">Practice</a></li>
+            <li><button className="btn-signout" onClick={handleSignOut}>Sign Out</button></li>
+            <li><a href="chat.html" className="btn-chat">+ New session</a></li>
+          </ul>
+        </nav>
+
+        <div className="page">
+          <div className="page-header">
+            <div className="page-eyebrow">📈 Learning Journey</div>
+            <h1>{firstName}'s Spanish Progression</h1>
+            <p>Tracking your growth across {LEVEL_LABELS[levelKey]} level — {currentCEFR} on the CEFR scale.</p>
+          </div>
+
+          {/* CEFR JOURNEY */}
+          <div className="journey-banner">
+            <div className="banner-top">
+              <div>
+                <div className="banner-title">Your CEFR Journey</div>
+                <div className="banner-sub">Six levels from first words to near-native fluency</div>
+              </div>
+              <div className="current-level-chip">
+                {currentCEFR} <span>You are here</span>
+              </div>
+            </div>
+
+            <div className="cefr-track">
+              {CEFR_LEVELS.map((lvl, i) => {
+                const isDone    = i < currentIdx;
+                const isCurrent = i === currentIdx;
+                const isLocked  = i > currentIdx;
+                return (
+                  <React.Fragment key={lvl}>
+                    <div className="cefr-node-wrap">
+                      <div className={`cefr-node ${isDone ? 'done' : isCurrent ? 'current' : 'locked'}`}>
+                        {isDone ? '✓' : lvl}
+                      </div>
+                      <div className={`cefr-label ${isDone ? 'done' : isCurrent ? 'current' : ''}`}>
+                        {lvl}
+                        {isCurrent && <><br/><span style={{fontSize:'0.62rem',opacity:0.7}}>current</span></>}
+                      </div>
+                    </div>
+                    {i < CEFR_LEVELS.length - 1 && (
+                      <div className={`cefr-connector ${isDone ? 'done' : isCurrent ? 'active-fill' : ''}`} />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+
+            <div className="xp-bar-wrap">
+              <div className="xp-bar-label">
+                <span>Progress within {currentCEFR}</span>
+                <span>{xpPct}%</span>
+              </div>
+              <div className="xp-track">
+                <div className="xp-fill" style={{ width: animIn ? `${xpPct}%` : '0%' }} />
+              </div>
+            </div>
+          </div>
+
+          {/* SKILL TRACKS */}
+          <div style={{marginBottom:'2rem'}}>
+            <div className="section-title">Skill Breakdown</div>
+            <div className="section-sub">Your proficiency across the six core competencies — updated each session.</div>
+            <div className="skills-grid">
+              {skills.map((s, i) => (
+                <SkillCard key={i} skill={s} animIn={animIn} />
+              ))}
+            </div>
+          </div>
+
+          {/* SCORE TREND */}
+          <div className="trend-card">
+            <div className="section-title">Score Trend</div>
+            <div className="section-sub">Overall session accuracy over your last {scoreData.length} sessions</div>
+            <ScoreTrend scores={scoreData} animIn={animIn} />
+          </div>
+
+          {/* MILESTONES */}
+          <div className="milestones-section">
+            <div className="section-title">Milestones</div>
+            <div className="section-sub">Achievements unlocked through practice and consistency</div>
+            <div className="milestone-list">
+              {milestones.map((m, i) => (
+                <div key={i} className="milestone-row">
+                  <div className={`milestone-icon ${m.done ? 'done' : 'locked'}`}>{m.icon}</div>
+                  <div className="milestone-content">
+                    <div className="milestone-name">{m.name}</div>
+                    <div className="milestone-desc">{m.desc}</div>
+                  </div>
+                  <div className="milestone-date">{m.done ? m.date : 'Locked'}</div>
+                  <div className={`milestone-check ${m.done ? 'done' : 'locked'}`}>
+                    {m.done ? '✓' : '○'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* VOCAB */}
+          <div className="vocab-card">
+            <div className="vocab-title">Vocabulary in Use</div>
+            <div className="vocab-sub">Words you've actively used — <span style={{color:'var(--gold)'}}>gold = new this week</span>, <span style={{color:'#7ecf85'}}>green = mastered</span></div>
+            <div className="vocab-chips">
+              {vocab.mastered.map(w => <span key={w} className="vocab-chip mastered">{w}</span>)}
+              {vocab.recent.map(w => <span key={w} className="vocab-chip new">{w}</span>)}
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  function SkillCard({ skill, animIn }) {
+    const trendLabel = { up: '↑ Improving', down: '↓ Needs work', flat: '→ Stable' }[skill.trend];
+    const trendClass = { up: 'badge-up', down: 'badge-down', flat: 'badge-flat' }[skill.trend];
+    return (
+      <div className="skill-card">
+        <div className="skill-header">
+          <div className="skill-name">
+            <span className="skill-icon">{skill.icon}</span>
+            {skill.name}
+            <span className={`skill-badge ${trendClass}`}>{trendLabel}</span>
+          </div>
+          <div className="skill-pct">{skill.pct}%</div>
+        </div>
+        <div className="skill-track">
+          <div
+            className="skill-fill"
+            style={{
+              width: animIn ? `${skill.pct}%` : '0%',
+              background: skill.color,
+              transition: `width 1.2s cubic-bezier(0.4,0,0.2,1) ${0.1}s`
+            }}
+          />
+        </div>
+        <div className="skill-sub">{skill.sub}</div>
+      </div>
+    );
+  }
+
+  function ScoreTrend({ scores, animIn }) {
+    const W = 800, H = 140, PAD = 20;
+    const min = Math.max(0,  Math.min(...scores) - 10);
+    const max = Math.min(100, Math.max(...scores) + 10);
+    const yScale = v => H - PAD - ((v - min) / (max - min)) * (H - PAD * 2);
+    const xScale = i => PAD + (i / (scores.length - 1)) * (W - PAD * 2);
+
+    const pts = scores.map((v, i) => `${xScale(i)},${yScale(v)}`).join(' ');
+    const areaPath = `M${xScale(0)},${yScale(scores[0])} ` +
+      scores.slice(1).map((v, i) => `L${xScale(i+1)},${yScale(v)}`).join(' ') +
+      ` L${xScale(scores.length-1)},${H-PAD} L${xScale(0)},${H-PAD} Z`;
+
+    const gridY = [100, 80, 60, 40];
+    const lastScore = scores[scores.length - 1];
+    const change    = scores.length > 1 ? lastScore - scores[0] : 0;
+
+    return (
+      <div>
+        <div style={{display:'flex', gap:'2rem', marginBottom:'0.5rem', flexWrap:'wrap'}}>
+          <div>
+            <div style={{fontFamily:"'Playfair Display',serif", fontSize:'2rem', lineHeight:1}}>{lastScore}%</div>
+            <div style={{fontSize:'0.76rem', color:'rgba(26,26,46,0.45)'}}>Latest session</div>
+          </div>
+          <div>
+            <div style={{fontFamily:"'Playfair Display',serif", fontSize:'2rem', lineHeight:1, color: change >= 0 ? 'var(--sage)' : 'var(--terracotta)'}}>
+              {change >= 0 ? '+' : ''}{change}%
+            </div>
+            <div style={{fontSize:'0.76rem', color:'rgba(26,26,46,0.45)'}}>Overall change</div>
+          </div>
+          <div>
+            <div style={{fontFamily:"'Playfair Display',serif", fontSize:'2rem', lineHeight:1}}>
+              {Math.round(scores.reduce((a,b) => a+b, 0) / scores.length)}%
+            </div>
+            <div style={{fontSize:'0.76rem', color:'rgba(26,26,46,0.45)'}}>Average</div>
+          </div>
+        </div>
+        <div className="chart-wrap">
+          <svg className="chart-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stopColor="var(--terracotta)" stopOpacity="0.12"/>
+                <stop offset="100%" stopColor="var(--terracotta)" stopOpacity="0"/>
+              </linearGradient>
+            </defs>
+            {gridY.map(g => (
+              <line key={g}
+                x1={PAD} y1={yScale(g)} x2={W - PAD} y2={yScale(g)}
+                className="chart-grid-line"
+              />
+            ))}
+            <path d={areaPath} className="chart-area" />
+            <polyline points={pts} className="chart-line" />
+            {scores.map((v, i) => (
+              <circle
+                key={i} cx={xScale(i)} cy={yScale(v)} r="4"
+                className="chart-dot"
+              >
+                <title>Session {i+1}: {v}%</title>
+              </circle>
+            ))}
+          </svg>
+        </div>
+        <div className="chart-labels">
+          {scores.map((_, i) => (
+            <span key={i}>{i === 0 ? 'Session 1' : i === scores.length - 1 ? `Session ${scores.length}` : ''}</span>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('progression-root')).render(<ProgressionApp />);
+</script>
+
+</body>
+</html>
