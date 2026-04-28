@@ -4,7 +4,7 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { auth } from "./auth/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -13,7 +13,7 @@ import "./styles/index.css";
 import Navbar from "./components/nav/nav";
 import Home from "./pages/home/home";
 import Footer from "./components/footer/footer";
-import Registration from "./pages/register/registration";
+// import Registration from "./pages/register/registration";
 import Login from "./pages/login/login";
 import Dashboard from "./pages/dashboard/dashboard";
 import Settings from "./pages/settings/settings";
@@ -26,12 +26,10 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    return onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
     });
-
-    return unsubscribe;
   }, []);
 
   if (loading) {
@@ -40,28 +38,28 @@ function App() {
 
   return (
     <Router>
-      <Navbar user={user}/>
+      <Navbar user={user} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route
           path="/dashboard"
           element={user ? <Dashboard user={user} /> : <Navigate to="/login" />}
         />
-        <Route
+        {/* <Route
           path="/register"
           element={!user ? <Registration /> : <Navigate to="/dashboard" />}
-        />
+        /> */}
         <Route
           path="/login"
           element={!user ? <Login /> : <Navigate to="/dashboard" />}
         />
         <Route
-            path="/settings"
-            element={user ? <Settings /> : <Navigate to="/login" />}
+          path="/settings"
+          element={user ? <Settings user={user} /> : <Navigate to="/login" />}
         />
         <Route
-            path="/conversations"
-            element={user ? <Conversations /> : <Navigate to="/login" />}
+          path="/conversations"
+          element={user ? <Conversations /> : <Navigate to="/login" />}
         />
       </Routes>
 
