@@ -1,53 +1,46 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { db, auth} from "../auth/firebase";
+import { collection, addDoc, doc, onSnapshot, setDoc, deleteDoc } from "firebase/firestore";
 
 export default function useConvos() {
+
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged((u) => setUser(u));
+    return () => unsub();
+  }, []);
+
+  const initializedRef = useRef(false);
+
   // const messages = activeChat?.messages || [];
 
-  const [conversations, setConversations] = useState(() => {
-    const saved = localStorage.getItem("conversations");
-    return saved
-      ? JSON.parse(saved)
-      : [
-          {
-            id: "1",
-            title: "New Chat",
-            messages: [
-              {
-                role: "ai",
-                text: "Hola! Type something in Spanish to start working!",
-                time: "12:00 PM",
-              },
-            ],
-          },
-        ];
-  });
+  const [conversations, setConversations] = useState([]);
+  const [activeChatId, setActiveChatId] = useState(null);
 
-  const [activeChatId, setActiveChatId] = useState(() => {
-    return localStorage.getItem("activeChatId") || "1";
-  });
+
+  const saveConvo = (convo) => {
+    if (!user) return;
+    setDoc(doc(db, "users", user.uid, "conversations", convo.id), convo);
+  };
 
   const [input, setInput] = useState("");
   const [level, setLevel] = useState("beginner");
 
   useEffect(() => {
-    const savedChats = localStorage.getItem("conversations");
-    const savedActive = localStorage.getItem("activeChatId");
-
-    if (savedChats) {
-      setConversations(JSON.parse(savedChats));
-    }
-
-    if (savedActive) {
-      setActiveChatId(savedActive);
-    }
-  }, []);
+    if (!user) return;
+    const ref = collection(db, "users", user.uid, "conversations");
+    const unsub = onSnapshot(ref, (snapshot) => {
+      const convos = snapshot.docs.map((d) => d.data());
+      setConversations(convos);
+      if (!initializedRef.current && convos.length > 0) {
+        setActiveChatId(convos[0].id);
+        initializedRef.current = true;
+      }
+    });
+    return () => unsub();
+  }, [user?.uid]);
 
   // SAVE WHEN DATA CHANGES
-  useEffect(() => {
-    localStorage.setItem("conversations", JSON.stringify(conversations));
-
-    localStorage.setItem("activeChatId", activeChatId);
-  }, [conversations, activeChatId]);
 
   const activeChat = conversations.find((chat) => chat.id === activeChatId);
   const messages = activeChat?.messages || [];
@@ -62,9 +55,24 @@ export default function useConvos() {
       messages: [],
     };
 
-    setConversations((prev) => [newChat, ...prev]);
+    saveConvo(newChat);
     setActiveChatId(newId);
   };
+
+  const saveSession = async () => {
+    if (!user || messages.length === 0) return;
+    try {
+      await addDoc(collection(db, "conversations"), {
+        userId: user.uid,
+        scenario: activeChat?.id,
+        scenarioLabel: activeChat?.title,
+        messages: messages.map(({role, text}) => ({role, text})),
+        messageCount: messages.length,
+      });
+    } catch (err) {
+      console.error("Failed to save session:", err);
+    }
+  }
 
   const openScenarioChat = (scenario) => {
     const existing = conversations.find((chat) => chat.scenario === scenario);
@@ -90,21 +98,19 @@ export default function useConvos() {
     const currentInput = input;
     setInput("");
 
+
+    const updatedChat = {
+      ...activeChat,
+      messages: [...messages, userMessage],
+      title: activeChat.title === "New Chat" ? currentInput.slice(0, 20) : activeChat.title,
+    };
+
     // add user message
     setConversations((prev) =>
       prev.map((chat) =>
-        chat.id === activeChatId
-          ? {
-              ...chat,
-              messages: [...chat.messages, userMessage],
-              title:
-                chat.title === "New Chat"
-                  ? currentInput.slice(0, 20)
-                  : chat.title,
-            }
-          : chat,
-      ),
+          (chat.id === activeChatId ? updatedChat : chat))
     );
+    saveConvo(updatedChat);
 
     const res = await fetch("http://localhost:8000/chat", {
       method: "POST",
@@ -129,20 +135,19 @@ export default function useConvos() {
       }),
     };
 
+    const finalChat = { ...updatedChat, messages: [...updatedChat.messages, aiMessage] };
     setConversations((prev) =>
       prev.map((chat) =>
-        chat.id === activeChatId
-          ? {
-              ...chat,
-              messages: [...chat.messages, aiMessage],
-            }
-          : chat,
-      ),
+          (chat.id === activeChatId ? finalChat : chat))
     );
+    saveConvo(finalChat);
   };
 
   // Delete conversations
   const deleteConversations = (chatId) => {
+    if (user) {
+      deleteDoc(doc(db, "users", user.uid, "conversations", chatId));
+    }
     setConversations((prev) => {
       const updated = prev.filter((chat) => chat.id !== chatId);
 
@@ -156,13 +161,6 @@ export default function useConvos() {
   };
 
   // SAVE STATES
-  useEffect(() => {
-    localStorage.setItem("conversations", JSON.stringify(conversations));
-  }, [conversations]);
-
-  useEffect(() => {
-    localStorage.setItem("activeChatId", activeChatId);
-  }, [activeChatId]);
 
   return {
     conversations,
@@ -171,6 +169,7 @@ export default function useConvos() {
     input,
     setInput,
     sendMessage,
+    saveSession,
     createNewChat,
     messages,
     openScenarioChat,
