@@ -27,6 +27,7 @@ export default function useConvos() {
   });
 
   const [input, setInput] = useState("");
+  const [level, setLevel] = useState("beginner");
 
   useEffect(() => {
     const savedChats = localStorage.getItem("conversations");
@@ -113,6 +114,7 @@ export default function useConvos() {
       body: JSON.stringify({
         message: currentInput,
         scenario: activeChat?.scenario,
+        level: level,
       }),
     });
 
@@ -173,5 +175,7 @@ export default function useConvos() {
     messages,
     openScenarioChat,
     deleteConversations,
+    level,
+    setLevel,
   };
 }

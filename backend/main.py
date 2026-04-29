@@ -18,9 +18,18 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     message: str
     scenario: str
+    level: str | None = "beginner"
 
-def build_system_prompt(message,scenario):
+def build_system_prompt(message, scenario, level):
+    
     base = "You are a helpful Spanish tutor. Always respond in Spanish."
+
+    level_rules = {
+        "beginner": "Use simple vocabulary. Short replies. Correct gently.",
+        "intermediate": "Use natural Spanish. Medium difficulty.",
+        "advanced": "Use fluent Spanish. Use idioms. Correct mistakes clearly."
+    }
+
 
     scenarios = {
         "dining": "You are a waiter in a restaurant. Focus on food ordering conversations.",
@@ -33,12 +42,12 @@ def build_system_prompt(message,scenario):
     return f"""
     {base}
 
-    Scenario: {scenarios.get(scenario, scenarios["dining"])}
+    Scenario: {scenarios.get(scenario, "General Conversation")}
+
+    Student Level: {level_rules.get(level, level_rules["beginner"])}
 
     Rules:
     - Always respond in Spanish
-    - Adapt to scenario
-    - Keep it natural
 
     User:
     {message}
@@ -47,7 +56,7 @@ def build_system_prompt(message,scenario):
 @app.post("/chat")
 def chat(req: ChatRequest):
 
-    prompt = build_system_prompt(req.message, req.scenario)
+    prompt = build_system_prompt(req.message, req.scenario, req.level)
 
     try:
         response = client.chat.completions.create(

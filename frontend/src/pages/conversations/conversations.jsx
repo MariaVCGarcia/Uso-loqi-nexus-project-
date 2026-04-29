@@ -14,6 +14,8 @@ export default function Conversations() {
     messages,
     openScenarioChat,
     deleteConversations,
+    level,
+    setLevel,
   } = useConvos();
 
   return (
@@ -160,6 +162,15 @@ export default function Conversations() {
           <div className="translate-hint">
             💡 Tip: Click any underlined word to see its translation.
           </div>
+          <select
+            className="set-level"
+            value={level}
+            onChange={(e) => setLevel(e.target.value)}
+          >
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
           <div className="input-row">
             <textarea
               className="chat-input"
