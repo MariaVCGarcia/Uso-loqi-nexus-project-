@@ -1,5 +1,5 @@
 import "./conversations.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useConvos from "../../hooks/useConvos";
 
 export default function Conversations() {
@@ -15,6 +15,16 @@ export default function Conversations() {
     openScenarioChat,
     deleteConversations,
   } = useConvos();
+
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() =>
+  {
+    const timer = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (s) =>
+    `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   return (
     <div className="chat-page">
@@ -133,7 +143,7 @@ export default function Conversations() {
           <span>
             <span className="live-dot"></span> Session active
           </span>
-          <span>00:00</span>
+          <span>{formatTime(elapsed)}</span>
           <span>Dining scenario · Intermediate</span>
         </div>
 
