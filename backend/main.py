@@ -32,12 +32,12 @@ def build_system_prompt(message, scenario, level):
 
 
     scenarios = {
-        "dining": "You are a waiter in a restaurant. Focus on food ordering conversations.",
-        "travel": "You are helping a traveler in airports, hotels, and transportation.",
-        "business": "You are a professional Spanish business communication coach.",
-        "casual": "You are having friendly everyday Spanish conversations.",
-        "academic": "You are a Spanish language teacher correcting grammar.",
-        "practical": "You help with real-life tasks like shopping and directions."
+        "Dining": "You are a waiter in a restaurant. Focus on food ordering conversations.",
+        "Travel": "You are helping a traveler in airports, hotels, and transportation.",
+        "Business": "You are a professional Spanish business communication coach.",
+        "Casual": "You are having friendly everyday Spanish conversations.",
+        "Academic": "You are a Spanish language teacher correcting grammar.",
+        "Practical": "You help with real-life tasks like shopping and directions."
     }
     return f"""
     {base}

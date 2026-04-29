@@ -19,8 +19,7 @@ export default function Conversations() {
   } = useConvos();
 
   const [elapsed, setElapsed] = useState(0);
-  useEffect(() =>
-  {
+  useEffect(() => {
     const timer = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -65,42 +64,42 @@ export default function Conversations() {
           <div className="scenario-list">
             <div
               className="scenario-item"
-              onClick={() => openScenarioChat("dining")}
+              onClick={() => openScenarioChat("Dining")}
             >
               <span className="scenario-icon">🍽</span>
               Dining
             </div>
             <div
               className="scenario-item"
-              onClick={() => openScenarioChat("travel")}
+              onClick={() => openScenarioChat("Travel")}
             >
               <span className="scenario-icon">✈️</span>
               Travel
             </div>
             <div
               className="scenario-item"
-              onClick={() => openScenarioChat("business")}
+              onClick={() => openScenarioChat("Business")}
             >
               <span className="scenario-icon">💼</span>
               Business
             </div>
             <div
               className="scenario-item"
-              onClick={() => openScenarioChat("casual")}
+              onClick={() => openScenarioChat("Casual")}
             >
               <span className="scenario-icon">💬</span>
               Casual
             </div>
             <div
               className="scenario-item"
-              onClick={() => openScenarioChat("academic")}
+              onClick={() => openScenarioChat("Academic")}
             >
               <span className="scenario-icon">🎓</span>
               Academic
             </div>
             <div
               className="scenario-item"
-              onClick={() => openScenarioChat("practical")}
+              onClick={() => openScenarioChat("Practical")}
             >
               <span className="scenario-icon">🛒</span>
               Practical

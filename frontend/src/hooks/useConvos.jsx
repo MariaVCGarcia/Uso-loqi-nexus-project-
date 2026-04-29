@@ -1,9 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { db, auth} from "../auth/firebase";
-import { collection, addDoc, doc, onSnapshot, setDoc, deleteDoc } from "firebase/firestore";
+import { db, auth } from "../auth/firebase";
+import { sendToAI } from "../services/aiService";
+import { saveConvo, deleteConvo, saveSessionDoc } from "../services/convoDb";
+import {
+  collection,
+  addDoc,
+  doc,
+  onSnapshot,
+  setDoc,
+  deleteDoc,
+} from "firebase/firestore";
 
 export default function useConvos() {
-
   const [user, setUser] = useState(null);
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((u) => setUser(u));
@@ -16,12 +24,6 @@ export default function useConvos() {
 
   const [conversations, setConversations] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
-
-
-  const saveConvo = (convo) => {
-    if (!user) return;
-    setDoc(doc(db, "users", user.uid, "conversations", convo.id), convo);
-  };
 
   const [input, setInput] = useState("");
   const [level, setLevel] = useState("beginner");
@@ -42,37 +44,42 @@ export default function useConvos() {
 
   // SAVE WHEN DATA CHANGES
 
-  const activeChat = conversations.find((chat) => chat.id === activeChatId);
+  const activeChat =
+    conversations.find((chat) => chat.id === activeChatId) || conversations[0];
   const messages = activeChat?.messages || [];
 
   const createNewChat = (scenario = "New convo") => {
+    const lowerCaseScenario = scenario.toLowerCase();
     const newId = Date.now().toString();
 
     const newChat = {
       id: newId,
       title: scenario,
-      scenario: scenario,
+      scenario: lowerCaseScenario,
       messages: [],
     };
 
-    saveConvo(newChat);
+    saveConvo(user, newChat);
     setActiveChatId(newId);
   };
 
   const saveSession = async () => {
     if (!user || messages.length === 0) return;
     try {
-      await addDoc(collection(db, "conversations"), {
+      await saveSession(user, {
         userId: user.uid,
         scenario: activeChat?.id,
         scenarioLabel: activeChat?.title,
-        messages: messages.map(({role, text}) => ({role, text})),
+        messages: messages.map(({ role, text }) => ({
+          role,
+          text,
+        })),
         messageCount: messages.length,
       });
     } catch (err) {
       console.error("Failed to save session:", err);
     }
-  }
+  };
 
   const openScenarioChat = (scenario) => {
     const existing = conversations.find((chat) => chat.scenario === scenario);
@@ -86,67 +93,52 @@ export default function useConvos() {
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMessage = {
-      role: "user",
-      text: input,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
     const currentInput = input;
     setInput("");
 
-
-    const updatedChat = {
-      ...activeChat,
-      messages: [...messages, userMessage],
-      title: activeChat.title === "New Chat" ? currentInput.slice(0, 20) : activeChat.title,
-    };
-
-    // add user message
-    setConversations((prev) =>
-      prev.map((chat) =>
-          (chat.id === activeChatId ? updatedChat : chat))
-    );
-    saveConvo(updatedChat);
-
-    const res = await fetch("http://localhost:8000/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: currentInput,
-        scenario: activeChat?.scenario,
-        level: level,
-      }),
-    });
-
-    const data = await res.json();
-
-    const aiMessage = {
-      role: "ai",
-      text: data.reply,
+    const userMessage = {
+      role: "user",
+      text: currentInput,
       time: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       }),
     };
 
-    const finalChat = { ...updatedChat, messages: [...updatedChat.messages, aiMessage] };
-    setConversations((prev) =>
-      prev.map((chat) =>
-          (chat.id === activeChatId ? finalChat : chat))
+    const aiResponse = await sendToAI(
+      currentInput,
+      activeChat?.scenario,
+      level,
     );
-    saveConvo(finalChat);
-  };
 
+    const aiMessage = {
+      role: "ai",
+      text: aiResponse.reply,
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    const finalChat = {
+      ...activeChat,
+      messages: [...messages, userMessage, aiMessage],
+      title:
+        (activeChat?.title || "New Chat") === "New Chat"
+          ? currentInput.slice(0, 20)
+          : activeChat?.title,
+    };
+
+    setConversations((prev) =>
+      prev.map((chat) => (chat.id === activeChatId ? finalChat : chat)),
+    );
+
+    saveConvo(user, finalChat);
+  };
   // Delete conversations
-  const deleteConversations = (chatId) => {
+  const deleteConversations = async (chatId) => {
     if (user) {
-      deleteDoc(doc(db, "users", user.uid, "conversations", chatId));
+      await deleteConvo(user, chatId);
     }
     setConversations((prev) => {
       const updated = prev.filter((chat) => chat.id !== chatId);
@@ -154,6 +146,21 @@ export default function useConvos() {
       // if you delete the active chat, switch to another one
       if (chatId === activeChatId && updated.length > 0) {
         setActiveChatId(updated[0].id);
+      }
+
+      if (updated.length === 0) {
+        const newId = Date.now().toString();
+
+        const newChat = {
+          id: newId,
+          title: "New Chat",
+          scenario: "New convo",
+          messages: [],
+        };
+
+        setConversations([newChat]);
+        setActiveChatId(newId);
+        return [newChat];
       }
 
       return updated;
