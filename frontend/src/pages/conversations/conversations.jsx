@@ -1,115 +1,31 @@
 import "./conversations.css";
 import { useState } from "react";
+import useConvos from "../../hooks/useConvos";
 
 export default function Conversations() {
-  // const messages = activeChat?.messages || [];
-
-  const [conversations, setConversations] = useState([
-    {
-      id: "1",
-      title: "New Chat",
-      messages: [
-        {
-          role: "ai",
-          text: "¡Buenas tardes! Bienvenido al restaurante.",
-          time: "12:00 PM",
-        },
-      ],
-    },
-  ]);
-
-  const [activeChatId, setActiveChatId] = useState("1");
-  const [input, setInput] = useState("");
-
-  const activeChat = conversations.find((chat) => chat.id === activeChatId);
-
-  const createNewChat = () => {
-    const newId = Date.now().toString();
-
-    const newChat = {
-      id: newId,
-      title: "New Chat",
-      messages: [],
-    };
-
-    setConversations((prev) => [newChat, ...prev]);
-    setActiveChatId(newId);
-  };
-
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
-    const userMessage = {
-      role: "user",
-      text: input,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    const currentInput = input;
-    setInput("");
-
-    // add user message
-    setConversations((prev) =>
-      prev.map((chat) =>
-        chat.id === activeChatId
-          ? {
-              ...chat,
-              messages: [...chat.messages, userMessage],
-              title:
-                chat.title === "New Chat"
-                  ? currentInput.slice(0, 20)
-                  : chat.title,
-            }
-          : chat,
-      ),
-    );
-
-    const res = await fetch("http://localhost:8000/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: currentInput,
-      }),
-    });
-
-    const data = await res.json();
-
-    const aiMessage = {
-      role: "ai",
-      text: data.reply,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    setConversations((prev) =>
-      prev.map((chat) =>
-        chat.id === activeChatId
-          ? {
-              ...chat,
-              messages: [...chat.messages, aiMessage],
-            }
-          : chat,
-      ),
-    );
-  };
+  const {
+    conversations,
+    activeChatId,
+    setActiveChatId,
+    input,
+    setInput,
+    sendMessage,
+    createNewChat,
+    messages,
+    openScenarioChat,
+    deleteConversations,
+  } = useConvos();
 
   return (
     <div className="chat-page">
       {/* SIDEBAR */}
       <aside className="chat-sidebar">
         <div className="sidebar-section">
-          <button className="btn-new-chat" onClick={createNewChat}>
+          <button className="btn-new-chat" onClick={() => createNewChat()}>
             + New Conversation
           </button>
         </div>
-        <div className="sidebar-label">Scenarios</div>
+        <div className="sidebar-label">Your conversations</div>
         <div className="sidebar-section">
           {conversations.map((chat) => (
             <div
@@ -120,28 +36,62 @@ export default function Conversations() {
               onClick={() => setActiveChatId(chat.id)}
             >
               <span className="scenario-icon">💬</span>
-              {chat.title}
+
+              <span style={{ flex: 1 }}>{chat.title}</span>
+
+              <button
+                className="delete-btn"
+                onClick={(e) => {
+                  deleteConversations(chat.id);
+                }}
+              >
+                🗑
+              </button>
             </div>
           ))}
-
+          <div className="sidebar-label">Scenarios</div>
           <div className="scenario-list">
-            <div className="scenario-item">
-              <span className="scenario-icon">🍽</span> Dining
+            <div
+              className="scenario-item"
+              onClick={() => openScenarioChat("dining")}
+            >
+              <span className="scenario-icon">🍽</span>
+              Dining
             </div>
-            <div className="scenario-item">
-              <span className="scenario-icon">✈️</span> Travel
+            <div
+              className="scenario-item"
+              onClick={() => openScenarioChat("travel")}
+            >
+              <span className="scenario-icon">✈️</span>
+              Travel
             </div>
-            <div className="scenario-item">
-              <span className="scenario-icon">💼</span> Business
+            <div
+              className="scenario-item"
+              onClick={() => openScenarioChat("business")}
+            >
+              <span className="scenario-icon">💼</span>
+              Business
             </div>
-            <div className="scenario-item">
-              <span className="scenario-icon">💬</span> Casual
+            <div
+              className="scenario-item"
+              onClick={() => openScenarioChat("casual")}
+            >
+              <span className="scenario-icon">💬</span>
+              Casual
             </div>
-            <div className="scenario-item">
-              <span className="scenario-icon">🎓</span> Academic
+            <div
+              className="scenario-item"
+              onClick={() => openScenarioChat("academic")}
+            >
+              <span className="scenario-icon">🎓</span>
+              Academic
             </div>
-            <div className="scenario-item">
-              <span className="scenario-icon">🛒</span> Practical
+            <div
+              className="scenario-item"
+              onClick={() => openScenarioChat("practical")}
+            >
+              <span className="scenario-icon">🛒</span>
+              Practical
             </div>
           </div>
         </div>
@@ -188,7 +138,7 @@ export default function Conversations() {
         </div>
 
         <div className="messages">
-          {activeChat?.messages.map((msg, index) => (
+          {messages.map((msg, index) => (
             <div
               key={index}
               className={`msg-row ${msg.role === "user" ? "user" : ""}`}
