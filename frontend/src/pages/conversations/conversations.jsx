@@ -1,24 +1,98 @@
 import "./conversations.css";
+import { useState } from "react";
+import useConvos from "../../hooks/useConvos";
 
 export default function Conversations() {
+  const {
+    conversations,
+    activeChatId,
+    setActiveChatId,
+    input,
+    setInput,
+    sendMessage,
+    createNewChat,
+    messages,
+    openScenarioChat,
+    deleteConversations,
+  } = useConvos();
+
   return (
     <div className="chat-page">
-
       {/* SIDEBAR */}
       <aside className="chat-sidebar">
         <div className="sidebar-section">
-          <button className="btn-new-chat">+ New Conversation</button>
+          <button className="btn-new-chat" onClick={() => createNewChat()}>
+            + New Conversation
+          </button>
         </div>
-
+        <div className="sidebar-label">Your conversations</div>
         <div className="sidebar-section">
+          {conversations.map((chat) => (
+            <div
+              key={chat.id}
+              className={`scenario-item ${
+                chat.id === activeChatId ? "active" : ""
+              }`}
+              onClick={() => setActiveChatId(chat.id)}
+            >
+              <span className="scenario-icon">💬</span>
+
+              <span style={{ flex: 1 }}>{chat.title}</span>
+
+              <button
+                className="delete-btn"
+                onClick={(e) => {
+                  deleteConversations(chat.id);
+                }}
+              >
+                🗑
+              </button>
+            </div>
+          ))}
           <div className="sidebar-label">Scenarios</div>
           <div className="scenario-list">
-            <div className="scenario-item active"><span className="scenario-icon">🍽</span> Dining</div>
-            <div className="scenario-item"><span className="scenario-icon">✈️</span> Travel</div>
-            <div className="scenario-item"><span className="scenario-icon">💼</span> Business</div>
-            <div className="scenario-item"><span className="scenario-icon">💬</span> Casual</div>
-            <div className="scenario-item"><span className="scenario-icon">🎓</span> Academic</div>
-            <div className="scenario-item"><span className="scenario-icon">🛒</span> Practical</div>
+            <div
+              className="scenario-item"
+              onClick={() => openScenarioChat("dining")}
+            >
+              <span className="scenario-icon">🍽</span>
+              Dining
+            </div>
+            <div
+              className="scenario-item"
+              onClick={() => openScenarioChat("travel")}
+            >
+              <span className="scenario-icon">✈️</span>
+              Travel
+            </div>
+            <div
+              className="scenario-item"
+              onClick={() => openScenarioChat("business")}
+            >
+              <span className="scenario-icon">💼</span>
+              Business
+            </div>
+            <div
+              className="scenario-item"
+              onClick={() => openScenarioChat("casual")}
+            >
+              <span className="scenario-icon">💬</span>
+              Casual
+            </div>
+            <div
+              className="scenario-item"
+              onClick={() => openScenarioChat("academic")}
+            >
+              <span className="scenario-icon">🎓</span>
+              Academic
+            </div>
+            <div
+              className="scenario-item"
+              onClick={() => openScenarioChat("practical")}
+            >
+              <span className="scenario-icon">🛒</span>
+              Practical
+            </div>
           </div>
         </div>
 
@@ -56,54 +130,53 @@ export default function Conversations() {
       {/* CHAT AREA */}
       <div className="chat-area">
         <div className="session-bar">
-          <span><span className="live-dot"></span> Session active</span>
+          <span>
+            <span className="live-dot"></span> Session active
+          </span>
           <span>00:00</span>
           <span>Dining scenario · Intermediate</span>
         </div>
 
         <div className="messages">
-          <div className="date-divider">Today</div>
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`msg-row ${msg.role === "user" ? "user" : ""}`}
+            >
+              <div className={`msg-avatar ${msg.role}`}>
+                {msg.role === "user" ? "J" : "U"}
+              </div>
 
-          <div className="msg-row">
-            <div className="msg-avatar ai">U</div>
-            <div>
-              <div className="bubble ai">¡Buenas tardes! Bienvenido al restaurante. ¿Tiene una <span className="translated-word ai-bubble" title="reservation">reservación</span>?</div>
-              <div className="msg-time">2:14 PM</div>
+              <div>
+                <div className={`bubble ${msg.role}`}>{msg.text}</div>
+                <div className="msg-time">{msg.time}</div>
+              </div>
             </div>
-          </div>
-
-          <div className="msg-row user">
-            <div className="msg-avatar user">J</div>
-            <div>
-              <div className="bubble user">Sí, tengo una reservación para dos personas.</div>
-              <div className="msg-time">2:15 PM</div>
-            </div>
-          </div>
-
-          <div className="msg-row">
-            <div className="msg-avatar ai">U</div>
-            <div>
-              <div className="bubble ai">¡Perfecto! ¿A nombre de quién está la <span className="translated-word ai-bubble" title="reservation">reservación</span>?</div>
-              <div className="msg-time">2:15 PM</div>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* INPUT */}
         <div className="input-area">
-          <div className="translate-hint">💡 Tip: Click any underlined word to see its translation.</div>
+          <div className="translate-hint">
+            💡 Tip: Click any underlined word to see its translation.
+          </div>
           <div className="input-row">
             <textarea
               className="chat-input"
               rows="1"
               placeholder="Escribe en español…"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
             />
-            <button className="send-btn">➤</button>
+            <button className="send-btn" onClick={sendMessage}>
+              ➤
+            </button>
           </div>
-          <div className="input-hint">Press Enter to send · Shift+Enter for new line</div>
+          <div className="input-hint">
+            Press Enter to send · Shift+Enter for new line
+          </div>
         </div>
       </div>
-
     </div>
   );
 }

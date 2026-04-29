@@ -19,7 +19,7 @@ import Dashboard from "./pages/dashboard/dashboard";
 import Settings from "./pages/settings/settings";
 import Conversations from "./pages/conversations/conversations";
 
-console.log("ENV TEST:", process.env.REACT_APP_FIREBASE_API_KEY);
+// console.log("ENV TEST:", process.env.REACT_APP_FIREBASE_API_KEY);
 
 function App() {
   const [user, setUser] = useState(null);

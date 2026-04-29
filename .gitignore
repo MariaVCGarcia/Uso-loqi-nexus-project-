@@ -32,6 +32,14 @@ yarn-error.log*
 frontend/.env
 .env.*
 
+backend/venv/
+venv/
+__pycache__/
+*.pyc
+
+backend/.env
+
+
 # project
 /css/styles.css.map
 .prepros
