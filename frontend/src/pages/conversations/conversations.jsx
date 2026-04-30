@@ -1,5 +1,6 @@
 import "./conversations.css";
-import { useState } from "react";
+import "./hints.css";
+import { useState, useEffect } from "react";
 import useConvos from "../../hooks/useConvos";
 
 export default function Conversations() {
@@ -14,7 +15,22 @@ export default function Conversations() {
     messages,
     openScenarioChat,
     deleteConversations,
+    level,
+    setLevel,
+    hint,
+    showHint,
+    setShowHint,
+    requestHint,
   } = useConvos();
+
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (s) =>
+    `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   return (
     <div className="chat-page">
@@ -53,42 +69,42 @@ export default function Conversations() {
           <div className="scenario-list">
             <div
               className="scenario-item"
-              onClick={() => openScenarioChat("dining")}
+              onClick={() => openScenarioChat("Dining")}
             >
               <span className="scenario-icon">🍽</span>
               Dining
             </div>
             <div
               className="scenario-item"
-              onClick={() => openScenarioChat("travel")}
+              onClick={() => openScenarioChat("Travel")}
             >
               <span className="scenario-icon">✈️</span>
               Travel
             </div>
             <div
               className="scenario-item"
-              onClick={() => openScenarioChat("business")}
+              onClick={() => openScenarioChat("Business")}
             >
               <span className="scenario-icon">💼</span>
               Business
             </div>
             <div
               className="scenario-item"
-              onClick={() => openScenarioChat("casual")}
+              onClick={() => openScenarioChat("Casual")}
             >
               <span className="scenario-icon">💬</span>
               Casual
             </div>
             <div
               className="scenario-item"
-              onClick={() => openScenarioChat("academic")}
+              onClick={() => openScenarioChat("Academic")}
             >
               <span className="scenario-icon">🎓</span>
               Academic
             </div>
             <div
               className="scenario-item"
-              onClick={() => openScenarioChat("practical")}
+              onClick={() => openScenarioChat("Practical")}
             >
               <span className="scenario-icon">🛒</span>
               Practical
@@ -133,7 +149,7 @@ export default function Conversations() {
           <span>
             <span className="live-dot"></span> Session active
           </span>
-          <span>00:00</span>
+          <span>{formatTime(elapsed)}</span>
           <span>Dining scenario · Intermediate</span>
         </div>
 
@@ -158,8 +174,17 @@ export default function Conversations() {
         {/* INPUT */}
         <div className="input-area">
           <div className="translate-hint">
-            💡 Tip: Click any underlined word to see its translation.
+            💡 Tip: Click the lightbulb to help you respond!
           </div>
+          <select
+            className="set-level"
+            value={level}
+            onChange={(e) => setLevel(e.target.value)}
+          >
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
           <div className="input-row">
             <textarea
               className="chat-input"
@@ -168,6 +193,10 @@ export default function Conversations() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
+            <button className="hint-btn" onClick={requestHint} title="Get hint">
+              💡
+            </button>
+
             <button className="send-btn" onClick={sendMessage}>
               ➤
             </button>
@@ -176,6 +205,16 @@ export default function Conversations() {
             Press Enter to send · Shift+Enter for new line
           </div>
         </div>
+        {showHint && (
+          <div className="hint-box">
+            <div className="hint-header">
+              💡 Hint
+              <button onClick={() => setShowHint(false)}>✖</button>
+            </div>
+
+            <pre className="hint-text">{hint}</pre>
+          </div>
+        )}
       </div>
     </div>
   );
