@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { db } from "../../auth/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, onSnapshot } from "firebase/firestore";
 import "./dashboard.css";
 
 const LEVEL_MAP = {
@@ -10,9 +10,32 @@ const LEVEL_MAP = {
   advanced:     { code: "C1", label: "Advanced" },
 };
 
+const SCENARIO_META = {
+  dining:    { label: "Dining" },
+  travel:    { label: "Travel" },
+  business:  { label: "Business" },
+  casual:    { label: "Casual" },
+  academic:  { label: "Academic" },
+  practical: { label: "Practical" },
+};
+
+function scoreDotClass(score) {
+  if (score >= 80) return "score-dot score-high";
+  if (score >= 65) return "score-dot score-mid";
+  return "score-dot score-low";
+}
+
+function formatDate(id) {
+  const ts = parseInt(id);
+  if (isNaN(ts)) return "—";
+  return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+
 export default function Dashboard({ user }) {
   const displayName = user?.displayName?.split(" ")[0] || user?.email || "there";
   const [level, setLevel] = useState(null);
+  const [conversations, setConversations] = useState([]);
 
   useEffect(() => {
     if (!user) return;
@@ -21,7 +44,25 @@ export default function Dashboard({ user }) {
     });
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    const ref = collection(db, "users", user.uid, "conversations");
+    const unsub = onSnapshot(ref, (snap) => {
+      const convos = snap.docs.map((d) => d.data());
+      convos.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+      setConversations(convos);
+    });
+    return () => unsub();
+  }, [user?.uid]);
+
   const badge = LEVEL_MAP[level] || null;
+
+  const totalConvos = conversations.length;
+  const totalMessages = conversations.reduce((sum, c) => sum + (c.messages?.filter(m => m.role === "user").length || 0), 0);
+  const gradedConvos = conversations.filter(c => c.score?.score != null);
+  const overallGrade = gradedConvos.length
+    ? Math.round(gradedConvos.reduce((sum, c) => sum + c.score.score, 0) / gradedConvos.length)
+    : null;
 
   return (
     <div className="page">
@@ -42,15 +83,11 @@ export default function Dashboard({ user }) {
       <div className="stats-row">
         <div className="stat-card">
           <div className="stat-card-label">Total Conversations</div>
-          <div className="stat-card-value">24</div>
-          <div className="stat-card-sub">Since Feb 20, 2026</div>
-          <div className="stat-card-trend trend-up">↑ 3 this week</div>
+          <div className="stat-card-value">{totalConvos}</div>
         </div>
         <div className="stat-card">
           <div className="stat-card-label">Messages Sent</div>
-          <div className="stat-card-value">318</div>
-          <div className="stat-card-sub">Across all sessions</div>
-          <div className="stat-card-trend trend-up">↑ 12% vs last week</div>
+          <div className="stat-card-value">{totalMessages}</div>
         </div>
         <div className="stat-card">
           <div className="stat-card-label">Time Practiced</div>
@@ -59,10 +96,9 @@ export default function Dashboard({ user }) {
           <div className="stat-card-trend trend-up">↑ 40m this week</div>
         </div>
         <div className="stat-card">
-          <div className="stat-card-label">Overall Error Rate</div>
-          <div className="stat-card-value">18%</div>
-          <div className="stat-card-sub">Down from 27% at start</div>
-          <div className="stat-card-trend trend-up">↓ Improving</div>
+          <div className="stat-card-label">Overall Grade</div>
+          <div className="stat-card-value">{overallGrade != null ? `${overallGrade}%` : "—"}</div>
+          <div className="stat-card-sub">{gradedConvos.length > 0 ? `Avg across ${gradedConvos.length} graded session${gradedConvos.length !== 1 ? "s" : ""}` : "No graded sessions yet"}</div>
         </div>
       </div>
 
@@ -270,48 +306,35 @@ export default function Dashboard({ user }) {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>Apr 15, 2026</td>
-              <td><span className="tag dining">🍽 Dining</span></td>
-              <td>22 min</td><td>34</td>
-              <td><span className="score-dot score-high"></span>88%</td>
-              <td><a href="#" style={{ fontSize: "0.8rem", color: "var(--terracotta)", textDecoration: "none" }}>Review</a></td>
-            </tr>
-            <tr>
-              <td>Apr 14, 2026</td>
-              <td><span className="tag casual">💬 Casual</span></td>
-              <td>18 min</td><td>27</td>
-              <td><span className="score-dot score-mid"></span>74%</td>
-              <td><a href="#" style={{ fontSize: "0.8rem", color: "var(--terracotta)", textDecoration: "none" }}>Review</a></td>
-            </tr>
-            <tr>
-              <td>Apr 13, 2026</td>
-              <td><span className="tag travel">✈️ Travel</span></td>
-              <td>30 min</td><td>46</td>
-              <td><span className="score-dot score-mid"></span>70%</td>
-              <td><a href="#" style={{ fontSize: "0.8rem", color: "var(--terracotta)", textDecoration: "none" }}>Review</a></td>
-            </tr>
-            <tr>
-              <td>Apr 12, 2026</td>
-              <td><span className="tag business">💼 Business</span></td>
-              <td>25 min</td><td>38</td>
-              <td><span className="score-dot score-high"></span>82%</td>
-              <td><a href="#" style={{ fontSize: "0.8rem", color: "var(--terracotta)", textDecoration: "none" }}>Review</a></td>
-            </tr>
-            <tr>
-              <td>Apr 11, 2026</td>
-              <td><span className="tag dining">🍽 Dining</span></td>
-              <td>15 min</td><td>21</td>
-              <td><span className="score-dot score-low"></span>61%</td>
-              <td><a href="#" style={{ fontSize: "0.8rem", color: "var(--terracotta)", textDecoration: "none" }}>Review</a></td>
-            </tr>
-            <tr>
-              <td>Apr 10, 2026</td>
-              <td><span className="tag academic">🎓 Academic</span></td>
-              <td>28 min</td><td>40</td>
-              <td><span className="score-dot score-mid"></span>76%</td>
-              <td><a href="#" style={{ fontSize: "0.8rem", color: "var(--terracotta)", textDecoration: "none" }}>Review</a></td>
-            </tr>
+            {conversations.length === 0 && (
+              <tr>
+                <td colSpan={6} style={{ textAlign: "center", color: "rgba(26,26,46,0.4)", padding: "1.5rem" }}>
+                  No conversations yet. Start a session to see your history.
+                </td>
+              </tr>
+            )}
+            {conversations.map((convo) => {
+              const meta = SCENARIO_META[convo.scenario?.toLowerCase()] || { label: convo.title || "General" };
+              const scoreVal = convo.score?.score;
+              const msgCount = convo.messages?.filter(m => m.role === "user").length || 0;
+              return (
+                <tr key={convo.id}>
+                  <td>{formatDate(convo.id)}</td>
+                  <td><span className={`tag ${convo.scenario?.toLowerCase()}`}>{meta.emoji} {meta.label}</span></td>
+                  <td>—</td>
+                  <td>{msgCount}</td>
+                  <td>
+                    {scoreVal != null
+                      ? <><span className={scoreDotClass(scoreVal)}></span>{scoreVal}%</>
+                      : <span style={{ color: "rgba(26,26,46,0.35)" }}>—</span>
+                    }
+                  </td>
+                  <td>
+                    <Link to="/conversations" style={{ fontSize: "0.8rem", color: "var(--terracotta)", textDecoration: "none" }}>Review</Link>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

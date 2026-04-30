@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { db, auth } from "../auth/firebase";
-import { sendToAI, getHint } from "../services/aiService";
-import { saveConvo, deleteConvo, saveSessionDoc } from "../services/convoDb";
+import { sendToAI, getHint, gradeConvo } from "../services/aiService";
+import { saveConvo, deleteConvo } from "../services/convoDb";
 
 import { collection, onSnapshot } from "firebase/firestore";
 
@@ -137,6 +137,12 @@ export default function useConvos() {
       );
 
       saveConvo(user, finalChat);
+
+      if (finalChat.messages.length % 6 === 0) {
+        gradeConvo(finalChat.messages, activeChat?.scenario, level)
+          .then((result) => saveConvo(user, { ...finalChat, score: result }))
+          .catch((err) => console.error("Grade failed:", err));
+      }
     } finally {
       setTyping(false);
     }
