@@ -20,6 +20,12 @@ class ChatRequest(BaseModel):
     scenario: str
     level: str | None = "beginner"
 
+class HintRequest(BaseModel):
+    message: str
+    scenario: str
+    level: str | None = "beginner"
+    messages: list | None = []
+
 def build_system_prompt(message, scenario, level):
     
     base = "You are a helpful Spanish tutor. Always respond in Spanish."
@@ -53,6 +59,62 @@ def build_system_prompt(message, scenario, level):
     {message}
     """
 
+def format_messages(messages):
+    if not messages:
+        return ""
+    
+    last_messages = messages[-5:] 
+
+    formatted = []
+    for m in last_messages: 
+        role = m.get("role", "user")
+        content = m.get("content", "")
+        formatted.append(f"{role.upper()}: {content}")
+
+    return "\n".join(formatted)
+
+
+def build_hint_prompt(message, scenario, level, messages):
+
+    conversation = format_messages(messages)
+
+    return f"""
+    you are a helpful Spanish tutor. 
+
+    You MUST base your answer on the conversation below.
+
+    Conversation:
+    {conversation}
+
+    USER MESSAGE: {message}
+
+    scenario: {scenario}
+    level: {level}
+
+
+    DON'T:
+    -Ask questions
+    - Start a conversation
+    - Say things like "what do you want to say"
+    - Be conversational
+
+    Student input maybe incomplete or empty
+
+    
+
+    OUTPUT ONLY: 
+    
+    English: what they want to say
+    Spanish: Spanish version
+    Starter: Sentence starter
+
+    Keep it useful
+
+
+    """
+
+# CHAT ENDPOINT
+
 @app.post("/chat")
 def chat(req: ChatRequest):
 
@@ -75,3 +137,40 @@ def chat(req: ChatRequest):
         print("ERROR:", e)
         return {"reply": str(e)}
     
+    
+# HINT ENDPOINT 
+
+@app.post("/hint")
+def hint(req: HintRequest):
+
+    prompt = build_hint_prompt(
+        req.message,
+        req.scenario,
+        req.level,
+        req.messages,
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": prompt
+                },
+                {
+                    "role": "user",
+                    "content": req.message
+                }
+            ]
+        )
+
+        return {
+            "hint": response.choices[0].message.content
+        }
+
+    except Exception as e:
+        print("ERROR:", e)
+        return {
+            "hint": str(e)
+        }

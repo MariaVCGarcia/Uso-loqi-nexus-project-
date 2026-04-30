@@ -1,15 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { db, auth } from "../auth/firebase";
-import { sendToAI } from "../services/aiService";
+import { sendToAI, getHint } from "../services/aiService";
 import { saveConvo, deleteConvo, saveSessionDoc } from "../services/convoDb";
-import {
-  collection,
-  addDoc,
-  doc,
-  onSnapshot,
-  setDoc,
-  deleteDoc,
-} from "firebase/firestore";
+
+import { collection, onSnapshot } from "firebase/firestore";
 
 export default function useConvos() {
   const [user, setUser] = useState(null);
@@ -20,13 +14,17 @@ export default function useConvos() {
 
   const initializedRef = useRef(false);
 
-  // const messages = activeChat?.messages || [];
-
   const [conversations, setConversations] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
 
   const [input, setInput] = useState("");
+
+  // Set level
   const [level, setLevel] = useState("beginner");
+
+  // Hints
+  const [hint, setHint] = useState("");
+  const [showHint, setShowHint] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -167,6 +165,29 @@ export default function useConvos() {
     });
   };
 
+  const requestHint = async () => {
+    let targetText = input.trim();
+
+    if (!targetText) {
+      const lastMessage = [...messages].slice(-1)[0];
+      targetText = lastMessage?.text || "";
+    }
+
+    try {
+      const hintResponse = await getHint(
+        targetText,
+        activeChat?.scenario,
+        level,
+        messages,
+      );
+
+      setHint(hintResponse.hint);
+      setShowHint(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // SAVE STATES
 
   return {
@@ -183,5 +204,10 @@ export default function useConvos() {
     deleteConversations,
     level,
     setLevel,
+
+    hint,
+    showHint,
+    setShowHint,
+    requestHint,
   };
 }

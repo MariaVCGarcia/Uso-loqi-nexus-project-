@@ -1,4 +1,5 @@
 import "./conversations.css";
+import "./hints.css";
 import { useState, useEffect } from "react";
 import useConvos from "../../hooks/useConvos";
 
@@ -16,6 +17,10 @@ export default function Conversations() {
     deleteConversations,
     level,
     setLevel,
+    hint,
+    showHint,
+    setShowHint,
+    requestHint,
   } = useConvos();
 
   const [elapsed, setElapsed] = useState(0);
@@ -188,6 +193,10 @@ export default function Conversations() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
+            <button className="hint-btn" onClick={requestHint} title="Get hint">
+              💡
+            </button>
+
             <button className="send-btn" onClick={sendMessage}>
               ➤
             </button>
@@ -196,6 +205,16 @@ export default function Conversations() {
             Press Enter to send · Shift+Enter for new line
           </div>
         </div>
+        {showHint && (
+          <div className="hint-box">
+            <div className="hint-header">
+              💡 Hint
+              <button onClick={() => setShowHint(false)}>✖</button>
+            </div>
+
+            <pre className="hint-text">{hint}</pre>
+          </div>
+        )}
       </div>
     </div>
   );
