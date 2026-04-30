@@ -1,68 +1,84 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { db, auth } from "../auth/firebase";
+import { sendToAI, getHint } from "../services/aiService";
+import { saveConvo, deleteConvo, saveSessionDoc } from "../services/convoDb";
+
+import { collection, onSnapshot } from "firebase/firestore";
 
 export default function useConvos() {
-  // const messages = activeChat?.messages || [];
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged((u) => setUser(u));
+    return () => unsub();
+  }, []);
 
-  const [conversations, setConversations] = useState(() => {
-    const saved = localStorage.getItem("conversations");
-    return saved
-      ? JSON.parse(saved)
-      : [
-          {
-            id: "1",
-            title: "New Chat",
-            messages: [
-              {
-                role: "ai",
-                text: "Hola! Type something in Spanish to start working!",
-                time: "12:00 PM",
-              },
-            ],
-          },
-        ];
-  });
+  const initializedRef = useRef(false);
 
-  const [activeChatId, setActiveChatId] = useState(() => {
-    return localStorage.getItem("activeChatId") || "1";
-  });
+  const [conversations, setConversations] = useState([]);
+  const [activeChatId, setActiveChatId] = useState(null);
 
   const [input, setInput] = useState("");
 
+  // Set level
+  const [level, setLevel] = useState("beginner");
+
+  // Hints
+  const [hint, setHint] = useState("");
+  const [showHint, setShowHint] = useState(false);
+
+  const [typing, setTyping] = useState(false);
+
   useEffect(() => {
-    const savedChats = localStorage.getItem("conversations");
-    const savedActive = localStorage.getItem("activeChatId");
-
-    if (savedChats) {
-      setConversations(JSON.parse(savedChats));
-    }
-
-    if (savedActive) {
-      setActiveChatId(savedActive);
-    }
-  }, []);
+    if (!user) return;
+    const ref = collection(db, "users", user.uid, "conversations");
+    const unsub = onSnapshot(ref, (snapshot) => {
+      const convos = snapshot.docs.map((d) => d.data());
+      setConversations(convos);
+      if (!initializedRef.current && convos.length > 0) {
+        setActiveChatId(convos[0].id);
+        initializedRef.current = true;
+      }
+    });
+    return () => unsub();
+  }, [user?.uid]);
 
   // SAVE WHEN DATA CHANGES
-  useEffect(() => {
-    localStorage.setItem("conversations", JSON.stringify(conversations));
 
-    localStorage.setItem("activeChatId", activeChatId);
-  }, [conversations, activeChatId]);
-
-  const activeChat = conversations.find((chat) => chat.id === activeChatId);
+  const activeChat =
+    conversations.find((chat) => chat.id === activeChatId) || conversations[0];
   const messages = activeChat?.messages || [];
 
   const createNewChat = (scenario = "New convo") => {
+    const lowerCaseScenario = scenario.toLowerCase();
     const newId = Date.now().toString();
 
     const newChat = {
       id: newId,
       title: scenario,
-      scenario: scenario,
+      scenario: lowerCaseScenario,
       messages: [],
     };
 
-    setConversations((prev) => [newChat, ...prev]);
+    saveConvo(user, newChat);
     setActiveChatId(newId);
+  };
+
+  const saveSession = async () => {
+    if (!user || messages.length === 0) return;
+    try {
+      await saveSession(user, {
+        userId: user.uid,
+        scenario: activeChat?.id,
+        scenarioLabel: activeChat?.title,
+        messages: messages.map(({ role, text }) => ({
+          role,
+          text,
+        })),
+        messageCount: messages.length,
+      });
+    } catch (err) {
+      console.error("Failed to save session:", err);
+    }
   };
 
   const openScenarioChat = (scenario) => {
@@ -77,70 +93,59 @@ export default function useConvos() {
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMessage = {
-      role: "user",
-      text: input,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
     const currentInput = input;
     setInput("");
 
-    // add user message
-    setConversations((prev) =>
-      prev.map((chat) =>
-        chat.id === activeChatId
-          ? {
-              ...chat,
-              messages: [...chat.messages, userMessage],
-              title:
-                chat.title === "New Chat"
-                  ? currentInput.slice(0, 20)
-                  : chat.title,
-            }
-          : chat,
-      ),
-    );
-
-    const res = await fetch("http://localhost:8000/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: currentInput,
-        scenario: activeChat?.scenario,
-      }),
-    });
-
-    const data = await res.json();
-
-    const aiMessage = {
-      role: "ai",
-      text: data.reply,
+    const userMessage = {
+      role: "user",
+      text: currentInput,
       time: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       }),
     };
 
-    setConversations((prev) =>
-      prev.map((chat) =>
-        chat.id === activeChatId
-          ? {
-              ...chat,
-              messages: [...chat.messages, aiMessage],
-            }
-          : chat,
-      ),
-    );
-  };
+    setTyping(true);
 
+    try {
+      const aiResponse = await sendToAI(
+        currentInput,
+        activeChat?.scenario,
+        level,
+      );
+
+      const aiMessage = {
+        role: "ai",
+        text: aiResponse.reply,
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      const finalChat = {
+        ...activeChat,
+        messages: [...messages, userMessage, aiMessage],
+        title:
+          (activeChat?.title || "New Chat") === "New Chat"
+            ? currentInput.slice(0, 20)
+            : activeChat?.title,
+      };
+
+      setConversations((prev) =>
+        prev.map((chat) => (chat.id === activeChatId ? finalChat : chat)),
+      );
+
+      saveConvo(user, finalChat);
+    } finally {
+      setTyping(false);
+    }
+  };
   // Delete conversations
-  const deleteConversations = (chatId) => {
+  const deleteConversations = async (chatId) => {
+    if (user) {
+      await deleteConvo(user, chatId);
+    }
     setConversations((prev) => {
       const updated = prev.filter((chat) => chat.id !== chatId);
 
@@ -149,18 +154,49 @@ export default function useConvos() {
         setActiveChatId(updated[0].id);
       }
 
+      if (updated.length === 0) {
+        const newId = Date.now().toString();
+
+        const newChat = {
+          id: newId,
+          title: "New Chat",
+          scenario: "New convo",
+          messages: [],
+        };
+
+        setConversations([newChat]);
+        setActiveChatId(newId);
+        return [newChat];
+      }
+
       return updated;
     });
   };
 
-  // SAVE STATES
-  useEffect(() => {
-    localStorage.setItem("conversations", JSON.stringify(conversations));
-  }, [conversations]);
+  const requestHint = async () => {
+    let targetText = input.trim();
 
-  useEffect(() => {
-    localStorage.setItem("activeChatId", activeChatId);
-  }, [activeChatId]);
+    if (!targetText) {
+      const lastMessage = [...messages].slice(-1)[0];
+      targetText = lastMessage?.text || "";
+    }
+
+    try {
+      const hintResponse = await getHint(
+        targetText,
+        activeChat?.scenario,
+        level,
+        messages,
+      );
+
+      setHint(hintResponse.hint);
+      setShowHint(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // SAVE STATES
 
   return {
     conversations,
@@ -169,9 +205,19 @@ export default function useConvos() {
     input,
     setInput,
     sendMessage,
+    saveSession,
     createNewChat,
     messages,
     openScenarioChat,
     deleteConversations,
+    level,
+    setLevel,
+
+    hint,
+    showHint,
+    setShowHint,
+    requestHint,
+
+    typing,
   };
 }
