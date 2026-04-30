@@ -26,6 +26,8 @@ export default function useConvos() {
   const [hint, setHint] = useState("");
   const [showHint, setShowHint] = useState(false);
 
+  const [typing, setTyping] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     const ref = collection(db, "users", user.uid, "conversations");
@@ -103,35 +105,41 @@ export default function useConvos() {
       }),
     };
 
-    const aiResponse = await sendToAI(
-      currentInput,
-      activeChat?.scenario,
-      level,
-    );
+    setTyping(true);
 
-    const aiMessage = {
-      role: "ai",
-      text: aiResponse.reply,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
+    try {
+      const aiResponse = await sendToAI(
+        currentInput,
+        activeChat?.scenario,
+        level,
+      );
 
-    const finalChat = {
-      ...activeChat,
-      messages: [...messages, userMessage, aiMessage],
-      title:
-        (activeChat?.title || "New Chat") === "New Chat"
-          ? currentInput.slice(0, 20)
-          : activeChat?.title,
-    };
+      const aiMessage = {
+        role: "ai",
+        text: aiResponse.reply,
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
 
-    setConversations((prev) =>
-      prev.map((chat) => (chat.id === activeChatId ? finalChat : chat)),
-    );
+      const finalChat = {
+        ...activeChat,
+        messages: [...messages, userMessage, aiMessage],
+        title:
+          (activeChat?.title || "New Chat") === "New Chat"
+            ? currentInput.slice(0, 20)
+            : activeChat?.title,
+      };
 
-    saveConvo(user, finalChat);
+      setConversations((prev) =>
+        prev.map((chat) => (chat.id === activeChatId ? finalChat : chat)),
+      );
+
+      saveConvo(user, finalChat);
+    } finally {
+      setTyping(false);
+    }
   };
   // Delete conversations
   const deleteConversations = async (chatId) => {
@@ -209,5 +217,7 @@ export default function useConvos() {
     showHint,
     setShowHint,
     requestHint,
+
+    typing,
   };
 }

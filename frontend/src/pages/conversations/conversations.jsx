@@ -174,7 +174,7 @@ export default function Conversations() {
         {/* INPUT */}
         <div className="input-area">
           <div className="translate-hint">
-            💡 Tip: Click any underlined word to see its translation.
+            💡 Tip: Click the lightbulb to help you respond!
           </div>
           <select
             className="set-level"
