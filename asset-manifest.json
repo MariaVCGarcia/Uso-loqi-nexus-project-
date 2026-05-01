@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/css/main.d49b442a.css",
-    "main.js": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/js/main.21ee34c7.js",
+    "main.js": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/js/main.50a61823.js",
     "static/js/453.825386d9.chunk.js": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/js/453.825386d9.chunk.js",
     "index.html": "/MariaVCGarcia/Uso-loqi-nexus-project-/index.html",
     "main.d49b442a.css.map": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/css/main.d49b442a.css.map",
-    "main.21ee34c7.js.map": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/js/main.21ee34c7.js.map",
+    "main.50a61823.js.map": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/js/main.50a61823.js.map",
     "453.825386d9.chunk.js.map": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/js/453.825386d9.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.d49b442a.css",
-    "static/js/main.21ee34c7.js"
+    "static/js/main.50a61823.js"
   ]
 }
