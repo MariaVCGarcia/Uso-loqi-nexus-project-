@@ -14,6 +14,22 @@ export async function sendToAI(message, scenario, level) {
   return await res.json();
 }
 
+export async function gradeConvo(messages, scenario, level)
+{
+  const res = await fetch("http://localhost:8000/grade", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      messages,
+      scenario,
+      level
+    }),
+  });
+  return await res.json();
+}
+
 export async function getHint(message, scenario, level, messages) {
   const res = await fetch("http://localhost:8000/hint", {
     method: "POST",

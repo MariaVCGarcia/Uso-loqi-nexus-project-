@@ -26,6 +26,11 @@ class HintRequest(BaseModel):
     level: str | None = "beginner"
     messages: list | None = []
 
+class GradeRequest(BaseModel):
+    messages: list
+    scenario: str
+    level: str | None = "beginner"
+
 def build_system_prompt(message, scenario, level):
     
     base = "You are a helpful Spanish tutor. Always respond in Spanish."
@@ -68,7 +73,7 @@ def format_messages(messages):
     formatted = []
     for m in last_messages: 
         role = m.get("role", "user")
-        content = m.get("content", "")
+        content = m.get("text", m.get("content", ""))
         formatted.append(f"{role.upper()}: {content}")
 
     return "\n".join(formatted)
@@ -174,3 +179,42 @@ def hint(req: HintRequest):
         return {
             "hint": str(e)
         }
+
+
+# GRADE ENDPOINT
+
+@app.post("/grade")
+def grade(req: GradeRequest):
+    formatted = []
+    for m in req.messages:
+        role = m.get("role", "user")
+        content = m.get("text", m.get("content", ""))
+        formatted.append(f"{role.upper()}: {content}")
+    conversation = "\n".join(formatted)
+
+    prompt = f"""
+    You are evaluating a Spanish language learner's responses during conversation.
+    Scenario: {req.scenario}
+    Level: {req.level}
+
+    Conversation:
+    {conversation}
+
+    Return ONLY valid JSON with these fields:
+    {{
+      "score": <overall 0-100>,
+    }}
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "system", "content": prompt}],
+            response_format={"type": "json_object"}
+        )
+        import json
+        return json.loads(response.choices[0].message.content)
+
+    except Exception as e:
+        print("ERROR:", e)
+        return {"score": 0, }

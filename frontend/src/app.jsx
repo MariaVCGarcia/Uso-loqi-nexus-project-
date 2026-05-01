@@ -15,7 +15,7 @@ import Home from "./pages/home/home";
 import Footer from "./components/footer/footer";
 // import Registration from "./pages/register/registration";
 import Login from "./pages/login/login";
-import Dashboard from "./pages/dashboard/dashboard";
+import Dashboard from "./pages/dashboard/dashboard2";
 import Settings from "./pages/settings/settings";
 import Conversations from "./pages/conversations/conversations";
 

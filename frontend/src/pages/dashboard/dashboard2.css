@@ -166,7 +166,7 @@ svg.line-chart   { width: 100%; height: 100%; }
   cursor: default;
   position: relative;
 }
-.heat-cell:hover { transform: scale(1.3); }
+.heat-cell:hover { transform: none; }
 .heat-cell.l1 { background: rgba(196, 98, 45, 0.2); }
 .heat-cell.l2 { background: rgba(196, 98, 45, 0.45); }
 .heat-cell.l3 { background: rgba(196, 98, 45, 0.7); }
@@ -714,7 +714,7 @@ body.drawer-open { overflow: hidden; }
 .toast.toast-error   .toast-progress { background: var(--terracotta); }
 .toast.toast-warning .toast-progress { background: var(--gold); }
 .toast.toast-info    .toast-progress { background: #6b9fd4; }
-@keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
+@keyframes toastProgress { from { width: 100%; } to { width: 0; } }
 
 /* -- DROPDOWN MENUS -- */
 /* JS: toggle class "dropdown-open" on .dropdown */
