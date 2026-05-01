@@ -1,5 +1,7 @@
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+
 export async function sendToAI(message, scenario, level) {
-  const res = await fetch("http://localhost:8000/chat", {
+  const res = await fetch(`${API_URL}/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -16,7 +18,7 @@ export async function sendToAI(message, scenario, level) {
 
 export async function gradeConvo(messages, scenario, level)
 {
-  const res = await fetch("http://localhost:8000/grade", {
+  const res = await fetch(`${API_URL}/grade`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -31,7 +33,7 @@ export async function gradeConvo(messages, scenario, level)
 }
 
 export async function getHint(message, scenario, level, messages) {
-  const res = await fetch("http://localhost:8000/hint", {
+  const res = await fetch(`${API_URL}/hint`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
