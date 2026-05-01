@@ -44,22 +44,21 @@ export default function useConvos() {
 
   // SAVE WHEN DATA CHANGES
 
-  const activeChat =
-    conversations.find((chat) => chat.id === activeChatId) || conversations[0];
+  const activeChat = conversations.find((chat) => chat.id === activeChatId);
   const messages = activeChat?.messages || [];
 
   const createNewChat = (scenario = "New convo") => {
-    const lowerCaseScenario = scenario.toLowerCase();
     const newId = Date.now().toString();
 
     const newChat = {
       id: newId,
       title: scenario,
-      scenario: lowerCaseScenario,
+      scenario: scenario.toLowerCase(),
       messages: [],
     };
 
     saveConvo(user, newChat);
+    setConversations((prev) => [...prev, newChat]);
     setActiveChatId(newId);
   };
 
@@ -84,7 +83,6 @@ export default function useConvos() {
   useEffect(() => {
     sessionStartRef.current = Date.now();
   }, [activeChatId]);
-
 
   const openScenarioChat = (scenario) => {
     const existing = conversations.find((chat) => chat.scenario === scenario);
@@ -114,6 +112,17 @@ export default function useConvos() {
       }),
     };
 
+    const updatedChat = {
+      ...activeChat,
+      messages: [...messages, userMessage],
+    };
+
+    setConversations((prev) =>
+      prev.map((chat) => (chat.id === activeChatId ? updatedChat : chat)),
+    );
+
+    saveConvo(user, updatedChat);
+
     setTyping(true);
 
     try {
@@ -131,7 +140,9 @@ export default function useConvos() {
           minute: "2-digit",
         }),
       };
-      const duration = Math.round((Date.now() - sessionStartRef.current) / 1000);
+      const duration = Math.round(
+        (Date.now() - sessionStartRef.current) / 1000,
+      );
       const finalChat = {
         ...activeChat,
         messages: [...messages, userMessage, aiMessage],
@@ -158,6 +169,7 @@ export default function useConvos() {
       setTyping(false);
     }
   };
+
   // Delete conversations
   const deleteConversations = async (chatId) => {
     if (user) {

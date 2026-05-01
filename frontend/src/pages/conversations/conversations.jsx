@@ -21,6 +21,7 @@ export default function Conversations() {
     showHint,
     setShowHint,
     requestHint,
+    typing,
   } = useConvos();
 
   const [elapsed, setElapsed] = useState(0);
@@ -32,15 +33,21 @@ export default function Conversations() {
     return () => clearInterval(timer);
   }, [timerActive]);
 
-  const activeChat = conversations.find((c) => c.id === activeChatId) || conversations[0];
+  const activeChat =
+    conversations.find((c) => c.id === activeChatId) || conversations[0];
 
   const todayStr = new Date().toDateString();
   const todayConvos = conversations.filter((c) => {
     const ts = parseInt(c.id);
     return !isNaN(ts) && new Date(ts).toDateString() === todayStr;
   });
-  const todayMessages = todayConvos.reduce((sum, c) => sum + (c.messages?.filter((m) => m.role === "user").length || 0), 0);
-  const todaySeconds = todayConvos.reduce((sum, c) => sum + (c.duration || 0), 0) + elapsed;
+  const todayMessages = todayConvos.reduce(
+    (sum, c) =>
+      sum + (c.messages?.filter((m) => m.role === "user").length || 0),
+    0,
+  );
+  const todaySeconds =
+    todayConvos.reduce((sum, c) => sum + (c.duration || 0), 0) + elapsed;
   const todayTime = Math.floor(todaySeconds / 60);
 
   const formatTime = (s) =>
@@ -55,6 +62,27 @@ export default function Conversations() {
             + New Conversation
           </button>
         </div>
+
+        <div className="sidebar-section">
+          <div className="sidebar-label">Your conversations</div>
+          {conversations.map((chat) => (
+            <div
+              key={chat.id}
+              className={`scenario-item ${chat.id === activeChatId ? "active" : ""}`}
+              onClick={() => setActiveChatId(chat.id)}
+            >
+              <span className="scenario-icon">💬</span>
+              <span style={{ flex: 1 }}>{chat.title}</span>
+              <button
+                className="delete-btn"
+                onClick={() => deleteConversations(chat.id)}
+              >
+                🗑
+              </button>
+            </div>
+          ))}
+        </div>
+
         <div className="sidebar-section">
           <div className="sidebar-label">Scenarios</div>
           <div className="scenario-list">
@@ -119,7 +147,11 @@ export default function Conversations() {
               <div className="stat-mini-label">Conversations</div>
             </div>
             <div className="stat-mini">
-              <span className="stat-mini-num">{{ beginner: "Beg", intermediate: "Int", advanced: "Adv" }[level] || level}</span>
+              <span className="stat-mini-num">
+                {{ beginner: "Beg", intermediate: "Int", advanced: "Adv" }[
+                  level
+                ] || level}
+              </span>
               <div className="stat-mini-label">Level</div>
             </div>
           </div>
@@ -135,7 +167,12 @@ export default function Conversations() {
             >
               <span className="scenario-icon">💬</span>
               <span style={{ flex: 1 }}>{chat.title}</span>
-              <button className="delete-btn" onClick={() => deleteConversations(chat.id)}>🗑</button>
+              <button
+                className="delete-btn"
+                onClick={() => deleteConversations(chat.id)}
+              >
+                🗑
+              </button>
             </div>
           ))}
         </div>
@@ -148,7 +185,10 @@ export default function Conversations() {
             <span className="live-dot"></span> Session active
           </span>
           <span>{formatTime(elapsed)}</span>
-          <span>{activeChat?.title || "New conversation"} · {level.charAt(0).toUpperCase() + level.slice(1)}</span>
+          <span>
+            {activeChat?.title || "New conversation"} ·{" "}
+            {level.charAt(0).toUpperCase() + level.slice(1)}
+          </span>
         </div>
 
         <div className="messages">
@@ -167,6 +207,20 @@ export default function Conversations() {
               </div>
             </div>
           ))}
+
+          {typing && (
+            <div className="msg-row">
+              <div className="msg-avatar ai">U</div>
+
+              <div>
+                <div className="typing-bubble">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* INPUT */}
@@ -190,12 +244,26 @@ export default function Conversations() {
               placeholder="Escribe en español…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+
+                  if (!timerActive) setTimerActive(true);
+                  sendMessage();
+                }
+              }}
             />
             <button className="hint-btn" onClick={requestHint} title="Get hint">
               💡
             </button>
 
-            <button className="send-btn" onClick={() => { if (!timerActive) setTimerActive(true); sendMessage(); }}>
+            <button
+              className="send-btn"
+              onClick={() => {
+                if (!timerActive) setTimerActive(true);
+                sendMessage();
+              }}
+            >
               ➤
             </button>
           </div>
