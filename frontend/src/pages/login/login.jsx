@@ -79,7 +79,7 @@ export default function Login() {
       {/* LEFT DECORATIVE PANEL */}
       <div className="left-panel">
         <Link to="/" className="panel-logo">
-          Usu <span>Loqui</span>
+          Uso <span>Loqui</span>
         </Link>
 
         <h2 className="panel-quote">

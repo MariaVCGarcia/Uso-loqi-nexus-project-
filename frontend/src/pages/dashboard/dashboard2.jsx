@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { db } from "../../auth/firebase";
 import { doc, getDoc, collection, onSnapshot } from "firebase/firestore";
-import "./dashboard.css";
+import "./dashboard2.css";
 
 const LEVEL_MAP = {
   beginner:     { code: "A1", label: "Beginner" },
@@ -32,7 +32,7 @@ function formatDate(id) {
 }
 
 /* ─── Slide-out Drawer ─── */
-function Drawer({ displayName, level, open, onClose }) {
+function Drawer({ displayName, level, onClose }) {
   const badge = LEVEL_MAP[level] || null;
 
   // Close on Escape key
@@ -50,7 +50,7 @@ function Drawer({ displayName, level, open, onClose }) {
       {/* Panel */}
       <nav className="drawer" aria-label="Site navigation">
         <div className="drawer-header">
-          <a href="/" className="drawer-logo">Usu <span>Loqui</span></a>
+          <a href="/" className="drawer-logo">Uso <span>Loqui</span></a>
           <button className="drawer-close" onClick={onClose} aria-label="Close menu">✕</button>
         </div>
 
@@ -526,7 +526,6 @@ export default function Dashboard({ user }) {
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
               {/* Filter dropdown */}
               <FilterDropdown value={filter} onChange={setFilter} />
-              <Link to="/conversations" style={{ fontSize: "0.82rem", color: "var(--terracotta)", textDecoration: "none" }}>+ New session</Link>
             </div>
           </div>
           <div className="card-sub">
@@ -543,7 +542,7 @@ export default function Dashboard({ user }) {
           <table className="history-table">
             <thead>
               <tr>
-                <th>Date</th><th>Scenario</th><th>Duration</th><th>Messages</th><th>Score</th><th>Actions</th>
+                <th>Date</th><th>Scenario</th><th>Messages</th><th>Score</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -564,7 +563,6 @@ export default function Dashboard({ user }) {
                   <tr key={convo.id}>
                     <td>{formatDate(convo.id)}</td>
                     <td><span className={`tag ${convo.scenario?.toLowerCase()}`}>{meta.label}</span></td>
-                    <td>—</td>
                     <td>{msgCount}</td>
                     <td>
                       {scoreVal != null

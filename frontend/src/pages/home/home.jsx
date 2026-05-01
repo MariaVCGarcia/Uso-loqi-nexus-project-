@@ -18,7 +18,7 @@ export default function Home({ user }) {
             Practice <em>real</em> conversations in Spanish
           </h1>
           <p className="hero-sub">
-            Usu Loqui gives you an AI conversation partner that adapts to your
+            Uso Loqui gives you an AI conversation partner that adapts to your
             level — so you can build fluency through natural dialogue, not rote
             drills.
           </p>
@@ -37,7 +37,7 @@ export default function Home({ user }) {
             <div className="chat-header">
               <div className="chat-avatar">U</div>
               <div className="chat-header-info">
-                <strong>Usu Loqui AI</strong>
+                <strong>Uso Loqui AI</strong>
                 <span>Spanish · Intermediate</span>
               </div>
               <div className="online-dot"></div>
@@ -95,7 +95,7 @@ export default function Home({ user }) {
       <section className="features" id="features">
         <h2 className="section-title">Everything you need to improve</h2>
         <p className="section-sub">
-          Usu Loqui combines conversational AI with deep learning analytics to
+          Uso Loqui combines conversational AI with deep learning analytics to
           make every practice session count.
         </p>
         <div className="features-grid">
@@ -213,7 +213,7 @@ export default function Home({ user }) {
       <section className="levels" id="levels">
         <h2 className="section-title">Your level, your pace</h2>
         <p className="section-sub">
-          Usu Loqui dynamically adjusts difficulty and tracks your progress
+          Uso Loqui dynamically adjusts difficulty and tracks your progress
           against internationally recognized CEFR benchmarks.
         </p>
         <div className="levels-grid">
@@ -252,7 +252,7 @@ export default function Home({ user }) {
           Ready to start <em>speaking</em>?
         </h2>
         <p>
-          Join Usu Loqui and practice Spanish the way it was meant to be —
+          Join Uso Loqui and practice Spanish the way it was meant to be —
           through real conversation.
         </p>
         <a onClick={handleGetStarted} className="btn-primary">

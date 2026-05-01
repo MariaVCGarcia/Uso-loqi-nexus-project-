@@ -19,7 +19,7 @@ export default function Navbar({ user }) {
         className="nav-logo"
         style={{ cursor: "pointer" }}
       >
-        Usu <span>Loqui</span>
+        Uso <span>Loqui</span>
       </a>
 
       <ul className="nav-links">
