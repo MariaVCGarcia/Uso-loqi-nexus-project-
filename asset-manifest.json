@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/css/main.d49b442a.css",
-    "main.js": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/js/main.50a61823.js",
-    "static/js/453.825386d9.chunk.js": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/js/453.825386d9.chunk.js",
-    "index.html": "/MariaVCGarcia/Uso-loqi-nexus-project-/index.html",
-    "main.d49b442a.css.map": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/css/main.d49b442a.css.map",
-    "main.50a61823.js.map": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/js/main.50a61823.js.map",
-    "453.825386d9.chunk.js.map": "/MariaVCGarcia/Uso-loqi-nexus-project-/static/js/453.825386d9.chunk.js.map"
+    "main.css": "/static/css/main.d49b442a.css",
+    "main.js": "/static/js/main.d39300d2.js",
+    "static/js/453.825386d9.chunk.js": "/static/js/453.825386d9.chunk.js",
+    "index.html": "/index.html",
+    "main.d49b442a.css.map": "/static/css/main.d49b442a.css.map",
+    "main.d39300d2.js.map": "/static/js/main.d39300d2.js.map",
+    "453.825386d9.chunk.js.map": "/static/js/453.825386d9.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.d49b442a.css",
-    "static/js/main.50a61823.js"
+    "static/js/main.d39300d2.js"
   ]
 }
