@@ -1,7 +1,7 @@
 from click import prompt
 from fastapi import FastAPI
 from pydantic import BaseModel
-from ai import client
+from backend.ai import client
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
