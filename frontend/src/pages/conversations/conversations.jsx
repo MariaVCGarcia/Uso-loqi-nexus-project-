@@ -24,10 +24,24 @@ export default function Conversations() {
   } = useConvos();
 
   const [elapsed, setElapsed] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
+
   useEffect(() => {
+    if (!timerActive) return;
     const timer = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [timerActive]);
+
+  const activeChat = conversations.find((c) => c.id === activeChatId) || conversations[0];
+
+  const todayStr = new Date().toDateString();
+  const todayConvos = conversations.filter((c) => {
+    const ts = parseInt(c.id);
+    return !isNaN(ts) && new Date(ts).toDateString() === todayStr;
+  });
+  const todayMessages = todayConvos.reduce((sum, c) => sum + (c.messages?.filter((m) => m.role === "user").length || 0), 0);
+  const todaySeconds = todayConvos.reduce((sum, c) => sum + (c.duration || 0), 0) + elapsed;
+  const todayTime = Math.floor(todaySeconds / 60);
 
   const formatTime = (s) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
@@ -41,30 +55,7 @@ export default function Conversations() {
             + New Conversation
           </button>
         </div>
-        <div className="sidebar-label">Your conversations</div>
         <div className="sidebar-section">
-          {conversations.map((chat) => (
-            <div
-              key={chat.id}
-              className={`scenario-item ${
-                chat.id === activeChatId ? "active" : ""
-              }`}
-              onClick={() => setActiveChatId(chat.id)}
-            >
-              <span className="scenario-icon">💬</span>
-
-              <span style={{ flex: 1 }}>{chat.title}</span>
-
-              <button
-                className="delete-btn"
-                onClick={(e) => {
-                  deleteConversations(chat.id);
-                }}
-              >
-                🗑
-              </button>
-            </div>
-          ))}
           <div className="sidebar-label">Scenarios</div>
           <div className="scenario-list">
             <div
@@ -116,30 +107,37 @@ export default function Conversations() {
           <div className="sidebar-label">Today's Stats</div>
           <div className="sidebar-stats">
             <div className="stat-mini">
-              <span className="stat-mini-num">0</span>
+              <span className="stat-mini-num">{todayMessages}</span>
               <div className="stat-mini-label">Messages</div>
             </div>
             <div className="stat-mini">
-              <span className="stat-mini-num">0m</span>
+              <span className="stat-mini-num">{todayTime}m</span>
               <div className="stat-mini-label">Time</div>
             </div>
             <div className="stat-mini">
-              <span className="stat-mini-num">14</span>
-              <div className="stat-mini-label">Words used</div>
+              <span className="stat-mini-num">{todayConvos.length}</span>
+              <div className="stat-mini-label">Conversations</div>
             </div>
             <div className="stat-mini">
-              <span className="stat-mini-num">B1</span>
+              <span className="stat-mini-num">{{ beginner: "Beg", intermediate: "Int", advanced: "Adv" }[level] || level}</span>
               <div className="stat-mini-label">Level</div>
             </div>
           </div>
         </div>
 
         <div className="sidebar-section">
-          <div className="sidebar-label">Login Streak</div>
-          <div className="streak-box">
-            <div className="streak-number">🔥 5</div>
-            <div className="streak-label">days in a row</div>
-          </div>
+          <div className="sidebar-label">Your conversations</div>
+          {conversations.map((chat) => (
+            <div
+              key={chat.id}
+              className={`scenario-item ${chat.id === activeChatId ? "active" : ""}`}
+              onClick={() => setActiveChatId(chat.id)}
+            >
+              <span className="scenario-icon">💬</span>
+              <span style={{ flex: 1 }}>{chat.title}</span>
+              <button className="delete-btn" onClick={() => deleteConversations(chat.id)}>🗑</button>
+            </div>
+          ))}
         </div>
       </aside>
 
@@ -150,7 +148,7 @@ export default function Conversations() {
             <span className="live-dot"></span> Session active
           </span>
           <span>{formatTime(elapsed)}</span>
-          <span>Dining scenario · Intermediate</span>
+          <span>{activeChat?.title || "New conversation"} · {level.charAt(0).toUpperCase() + level.slice(1)}</span>
         </div>
 
         <div className="messages">
@@ -197,7 +195,7 @@ export default function Conversations() {
               💡
             </button>
 
-            <button className="send-btn" onClick={sendMessage}>
+            <button className="send-btn" onClick={() => { if (!timerActive) setTimerActive(true); sendMessage(); }}>
               ➤
             </button>
           </div>

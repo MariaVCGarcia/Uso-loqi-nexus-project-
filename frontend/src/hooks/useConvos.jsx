@@ -18,7 +18,7 @@ export default function useConvos() {
   const [activeChatId, setActiveChatId] = useState(null);
 
   const [input, setInput] = useState("");
-
+  const sessionStartRef = useRef(Date.now());
   // Set level
   const [level, setLevel] = useState("beginner");
 
@@ -81,6 +81,11 @@ export default function useConvos() {
     }
   };
 
+  useEffect(() => {
+    sessionStartRef.current = Date.now();
+  }, [activeChatId]);
+
+
   const openScenarioChat = (scenario) => {
     const existing = conversations.find((chat) => chat.scenario === scenario);
     if (existing) {
@@ -92,6 +97,10 @@ export default function useConvos() {
 
   const sendMessage = async () => {
     if (!input.trim()) return;
+    if (!activeChat?.id) {
+      createNewChat();
+      return;
+    }
 
     const currentInput = input;
     setInput("");
@@ -122,15 +131,17 @@ export default function useConvos() {
           minute: "2-digit",
         }),
       };
-
+      const duration = Math.round((Date.now() - sessionStartRef.current) / 1000);
       const finalChat = {
         ...activeChat,
         messages: [...messages, userMessage, aiMessage],
+        duration: (activeChat?.duration || 0) + duration,
         title:
           (activeChat?.title || "New Chat") === "New Chat"
             ? currentInput.slice(0, 20)
             : activeChat?.title,
       };
+      sessionStartRef.current = Date.now();
 
       setConversations((prev) =>
         prev.map((chat) => (chat.id === activeChatId ? finalChat : chat)),
@@ -170,6 +181,7 @@ export default function useConvos() {
           messages: [],
         };
 
+        saveConvo(user, newChat);
         setConversations([newChat]);
         setActiveChatId(newId);
         return [newChat];

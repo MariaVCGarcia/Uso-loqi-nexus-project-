@@ -204,11 +204,29 @@ function SessionModal({ convo, onClose }) {
   );
 }
 
+const QUOTES = [
+  { text: "Education is the most powerful weapon which you can use to change the world.",
+    author: "Nelson Mandela" },
+  { text: "Learning another language is not only learning different words for the same things, but learning another way to think about things.",
+    author:"Flora Lewis"},
+  { text: "To have another language is to possess a second soul.",
+    author: "Charlemagne" },
+  { text: "One language sets you in a corridor for life. Two languages open every door along the way.",
+    author: "Frank Smith" },
+  { text: "Never give up trying to learn the language you want to learn, be consistent, have fun and trust the process.",
+    author: "Camille Hanson" },
+  { text: "Languages aren't just made of words. They're modes of looking at the world.",
+    author: "R. F. Kuang" },
+  { text: "Do the best you can until you know better. Then when you know better, do better.",
+    author: "Maya Angelou" },
+];
+
 /* ─── Main Dashboard ─── */
 export default function Dashboard({ user }) {
   const displayName = user?.displayName?.split(" ")[0] || user?.email || "there";
 
-  const [level,         setLevel]         = useState(null);
+  const [level, setLevel] = useState(null);
+  const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
   const [conversations, setConversations] = useState([]);
 
   // Drawer state
@@ -219,6 +237,7 @@ export default function Dashboard({ user }) {
 
   // Modal state — holds the selected convo or null
   const [selectedConvo, setSelectedConvo] = useState(null);
+  const [monthOffset, setMonthOffset] = useState(0);
 
   // Sync drawer-open class on body (needed for CSS hamburger animation + scroll lock)
   useEffect(() => {
@@ -260,6 +279,11 @@ export default function Dashboard({ user }) {
     return c.scenario?.toLowerCase() === filter;
   });
 
+  //for time saving function
+  const totalSeconds = conversations.reduce((sum, c) => sum + (c.duration || 0), 0);
+  const totalMinutes = (totalSeconds / 60).toFixed(1);
+
+
   return (
     <>
       {/* ── Slide-out Drawer ── */}
@@ -293,7 +317,7 @@ export default function Dashboard({ user }) {
             </button>
             <div>
               <h1>Your Progress</h1>
-              <p>Welcome back, {displayName} · 5-day streak 🔥 · Last session: Today</p>
+              <p>Welcome back, {displayName}!</p>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -314,9 +338,8 @@ export default function Dashboard({ user }) {
           </div>
           <div className="stat-card">
             <div className="stat-card-label">Time Practiced</div>
-            <div className="stat-card-value">6.4h</div>
-            <div className="stat-card-sub">Total time in Spanish</div>
-            <div className="stat-card-trend trend-up">↑ 40m this week</div>
+            <div className="stat-card-value">{totalMinutes}</div>
+            <div className="stat-card-sub">active time in minutes</div>
           </div>
           <div className="stat-card">
             <div className="stat-card-label">Overall Grade</div>
@@ -329,193 +352,88 @@ export default function Dashboard({ user }) {
           </div>
         </div>
 
-        {/* CEFR PROGRESS */}
-        <div className="card" style={{ marginBottom: "1.5rem" }}>
-          <div className="card-title">CEFR Proficiency Estimate</div>
-          <div className="card-sub">Based on vocabulary usage, grammar accuracy, and response complexity</div>
-          <div className="cefr-track"><div className="cefr-fill"></div></div>
-          <div className="cefr-labels">
-            <span>A1</span><span>A2</span><span>B1 ← You are here</span><span>B2</span><span>C1</span><span>C2</span>
+        {/* INSPIRATIONAL QUOTE */}
+        <div className="card quote-card" style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "1.25rem" }}>
+          <div style={{ fontSize: "2rem", lineHeight: 1 }}>💬</div>
+          <div>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.05rem", fontStyle: "italic", marginBottom: "0.35rem" }}>
+              "{quote.text}"
+            </div>
+            <div style={{ fontSize: "0.78rem", color: "rgba(26,26,46,0.45)", fontWeight: 500 }}>— {quote.author}</div>
           </div>
         </div>
 
-        {/* ERROR BREAKDOWN + RADAR */}
-        <div className="grid-2">
-          <div className="card">
-            <div className="card-title">Error Breakdown</div>
-            <div className="card-sub">By category across all sessions</div>
-            <div className="bar-chart">
-              <div className="bar-row">
-                <span className="bar-label">Grammar</span>
-                <div className="bar-track"><div className="bar-fill" style={{ width: "72%", background: "var(--terracotta)" }}></div></div>
-                <span className="bar-val" style={{ color: "var(--terracotta)" }}>72%</span>
-              </div>
-              <div className="bar-row">
-                <span className="bar-label">Verb conjugation</span>
-                <div className="bar-track"><div className="bar-fill" style={{ width: "58%", background: "var(--terracotta)" }}></div></div>
-                <span className="bar-val" style={{ color: "var(--terracotta)" }}>58%</span>
-              </div>
-              <div className="bar-row">
-                <span className="bar-label">Vocabulary</span>
-                <div className="bar-track"><div className="bar-fill" style={{ width: "45%", background: "var(--gold)" }}></div></div>
-                <span className="bar-val" style={{ color: "var(--gold)" }}>45%</span>
-              </div>
-              <div className="bar-row">
-                <span className="bar-label">Word order</span>
-                <div className="bar-track"><div className="bar-fill" style={{ width: "38%", background: "var(--gold)" }}></div></div>
-                <span className="bar-val" style={{ color: "var(--gold)" }}>38%</span>
-              </div>
-              <div className="bar-row">
-                <span className="bar-label">Pragmatics</span>
-                <div className="bar-track"><div className="bar-fill" style={{ width: "20%", background: "var(--sage)" }}></div></div>
-                <span className="bar-val" style={{ color: "var(--sage)" }}>20%</span>
-              </div>
-              <div className="bar-row">
-                <span className="bar-label">Articles</span>
-                <div className="bar-track"><div className="bar-fill" style={{ width: "15%", background: "var(--sage)" }}></div></div>
-                <span className="bar-val" style={{ color: "var(--sage)" }}>15%</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-title">Skill Radar</div>
-            <div className="card-sub">Your strengths at a glance</div>
-            <div className="radar-wrap">
-              <svg className="radar" viewBox="0 0 200 200" width="200" height="200">
-                <polygon points="100,30 170,65 170,135 100,170 30,135 30,65" fill="none" stroke="rgba(26,26,46,0.07)" strokeWidth="1"/>
-                <polygon points="100,50 152,77 152,123 100,150 48,123 48,77" fill="none" stroke="rgba(26,26,46,0.07)" strokeWidth="1"/>
-                <polygon points="100,70 134,89 134,111 100,130 66,111 66,89" fill="none" stroke="rgba(26,26,46,0.07)" strokeWidth="1"/>
-                <line x1="100" y1="30" x2="100" y2="170" stroke="rgba(26,26,46,0.07)" strokeWidth="1"/>
-                <line x1="30"  y1="65"  x2="170" y2="135" stroke="rgba(26,26,46,0.07)" strokeWidth="1"/>
-                <line x1="170" y1="65"  x2="30"  y2="135" stroke="rgba(26,26,46,0.07)" strokeWidth="1"/>
-                <polygon points="100,44 156,80 153,120 100,157 47,120 55,72" fill="rgba(196,98,45,0.15)" stroke="var(--terracotta)" strokeWidth="2"/>
-                <text x="100" y="22"  textAnchor="middle" fontSize="10" fill="rgba(26,26,46,0.6)" fontFamily="DM Sans">Fluency</text>
-                <text x="178" y="62"  textAnchor="start"  fontSize="10" fill="rgba(26,26,46,0.6)" fontFamily="DM Sans">Pragmatics</text>
-                <text x="178" y="140" textAnchor="start"  fontSize="10" fill="rgba(26,26,46,0.6)" fontFamily="DM Sans">Comprehension</text>
-                <text x="100" y="184" textAnchor="middle" fontSize="10" fill="rgba(26,26,46,0.6)" fontFamily="DM Sans">Conjugation</text>
-                <text x="22"  y="140" textAnchor="end"    fontSize="10" fill="rgba(26,26,46,0.6)" fontFamily="DM Sans">Vocabulary</text>
-                <text x="22"  y="62"  textAnchor="end"    fontSize="10" fill="rgba(26,26,46,0.6)" fontFamily="DM Sans">Grammar</text>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* VOCABULARY GROWTH + ACTIVITY HEATMAP */}
+        {/* Calendar */}
         <div className="grid-2" style={{ marginBottom: "1.5rem" }}>
-          <div className="card">
-            <div className="card-title">Vocabulary Growth</div>
-            <div className="card-sub">Unique words used per session</div>
-            <div className="line-chart-wrap">
-              <svg className="line-chart" viewBox="0 0 400 140" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="rgba(196,98,45,0.2)"/>
-                    <stop offset="100%" stopColor="rgba(196,98,45,0)"/>
-                  </linearGradient>
-                </defs>
-                <path d="M0,120 L33,108 L66,100 L99,90 L132,82 L165,74 L198,65 L231,58 L264,50 L297,42 L330,35 L363,28 L400,22 L400,140 L0,140 Z" fill="url(#grad)"/>
-                <polyline points="0,120 33,108 66,100 99,90 132,82 165,74 198,65 231,58 264,50 297,42 330,35 363,28 400,22"
-                  fill="none" stroke="var(--terracotta)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="0"   cy="120" r="3.5" fill="var(--terracotta)"/>
-                <circle cx="66"  cy="100" r="3.5" fill="var(--terracotta)"/>
-                <circle cx="132" cy="82"  r="3.5" fill="var(--terracotta)"/>
-                <circle cx="198" cy="65"  r="3.5" fill="var(--terracotta)"/>
-                <circle cx="264" cy="50"  r="3.5" fill="var(--terracotta)"/>
-                <circle cx="330" cy="35"  r="3.5" fill="var(--terracotta)"/>
-                <circle cx="400" cy="22"  r="5"   fill="var(--terracotta)" stroke="#fff" strokeWidth="2"/>
-                <text x="0"   y="138" fontSize="9" fill="rgba(26,26,46,0.35)" fontFamily="DM Sans" textAnchor="middle">Feb</text>
-                <text x="66"  y="138" fontSize="9" fill="rgba(26,26,46,0.35)" fontFamily="DM Sans" textAnchor="middle">Feb 28</text>
-                <text x="132" y="138" fontSize="9" fill="rgba(26,26,46,0.35)" fontFamily="DM Sans" textAnchor="middle">Mar 7</text>
-                <text x="198" y="138" fontSize="9" fill="rgba(26,26,46,0.35)" fontFamily="DM Sans" textAnchor="middle">Mar 14</text>
-                <text x="264" y="138" fontSize="9" fill="rgba(26,26,46,0.35)" fontFamily="DM Sans" textAnchor="middle">Mar 21</text>
-                <text x="330" y="138" fontSize="9" fill="rgba(26,26,46,0.35)" fontFamily="DM Sans" textAnchor="middle">Mar 28</text>
-                <text x="400" y="138" fontSize="9" fill="rgba(26,26,46,0.35)" fontFamily="DM Sans" textAnchor="middle">Apr</text>
-              </svg>
-            </div>
-            <div style={{ display: "flex", gap: "2rem", marginTop: "0.5rem" }}>
-              <div>
-                <div style={{ fontFamily: "'Playfair Display',serif", fontSize: "1.4rem" }}>248</div>
-                <div style={{ fontSize: "0.75rem", color: "rgba(26,26,46,0.45)" }}>Unique words total</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: "'Playfair Display',serif", fontSize: "1.4rem" }}>31</div>
-                <div style={{ fontSize: "0.75rem", color: "rgba(26,26,46,0.45)" }}>New this week</div>
-              </div>
-            </div>
-          </div>
+        {(() => {
+          const today = new Date();
+          const display = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+          const year = display.getFullYear();
+          const month = display.getMonth();
+          const monthName = display.toLocaleString("en-US", { month: "long", year: "numeric" });
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          const firstDayOfWeek = (new Date(year, month, 1).getDay() + 6) % 7;
 
-          <div className="card">
-            <div className="card-title">Activity Heatmap</div>
-            <div className="card-sub">Practice sessions this year</div>
-            <div className="heatmap-months">
-              <span>Feb</span><span>Mar</span><span></span><span>Apr</span><span></span>
-              <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-            </div>
-            <div className="heatmap-grid" id="heatmap"></div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.8rem", fontSize: "0.72rem", color: "rgba(26,26,46,0.4)" }}>
-              Less
-              <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: "var(--cream)", border: "1px solid rgba(26,26,46,0.1)" }}></div>
-              <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: "rgba(196,98,45,0.2)" }}></div>
-              <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: "rgba(196,98,45,0.45)" }}></div>
-              <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: "var(--terracotta)" }}></div>
-              More
-            </div>
-          </div>
-        </div>
+          const activeDays = {};
+          conversations.forEach((c) => {
+            const ts = parseInt(c.id);
+            if (!isNaN(ts)) {
+              const key = new Date(ts).toDateString();
+              activeDays[key] = (activeDays[key] || 0) + 1;
+            }
+          });
 
-        {/* STRENGTHS + RECOMMENDATIONS */}
-        <div className="grid-2" style={{ marginBottom: "1.5rem" }}>
-          <div className="card">
-            <div className="card-title">Strengths &amp; Areas to Improve</div>
-            <div className="card-sub">Based on your last 5 sessions</div>
-            <div style={{ marginBottom: "0.75rem", fontSize: "0.78rem", fontWeight: 500, color: "var(--sage)", letterSpacing: "0.05em", textTransform: "uppercase" }}>✓ Top Strengths</div>
-            <div className="strength-list" style={{ marginBottom: "1.2rem" }}>
-              <div className="strength-item good"><span className="strength-icon">🎯</span> Contextually appropriate responses in casual conversation</div>
-              <div className="strength-item good"><span className="strength-icon">💬</span> Response fluency and sentence length improving</div>
-              <div className="strength-item good"><span className="strength-icon">📚</span> Strong vocabulary diversity (31 new words this week)</div>
-            </div>
-            <div style={{ marginBottom: "0.75rem", fontSize: "0.78rem", fontWeight: 500, color: "var(--gold)", letterSpacing: "0.05em", textTransform: "uppercase" }}>⚠ Areas to Improve</div>
-            <div className="strength-list">
-              <div className="strength-item improve"><span className="strength-icon">🔧</span> Verb conjugation in past tense (preterite vs. imperfect)</div>
-              <div className="strength-item improve"><span className="strength-icon">📝</span> Gender agreement with nouns and adjectives</div>
-              <div className="strength-item improve"><span className="strength-icon">🔄</span> Use of subjunctive mood in complex sentences</div>
-            </div>
-          </div>
+          function heatLevel(count) {
+            return count ? "l4" : "";
+          }
 
-          <div className="card">
-            <div className="card-title">Personalized Recommendations</div>
-            <div className="card-sub">Suggested next steps for you</div>
-            <div className="reco-list">
-              <div className="reco-item">
-                <span className="reco-icon">🍽</span>
-                <div className="reco-text">
-                  <strong>Practice: Dining scenario</strong>
-                  <span>You're getting comfortable here. Push to Advanced difficulty.</span>
+          const cells = [];
+          for (let i = 0; i < firstDayOfWeek; i++) cells.push(null);
+          for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+
+          return (
+            <div className="card">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+                <div className="card-title">Calendar</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <button onClick={() => setMonthOffset(o => o - 1)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem", color: "var(--ink)", opacity: 0.6 }}>‹</button>
+                  <span style={{ fontSize: "0.85rem", fontWeight: 500, minWidth: "7rem", textAlign: "center" }}>{monthName}</span>
+                  <button onClick={() => setMonthOffset(o => Math.min(o + 1, 0))} disabled={monthOffset === 0} style={{ background: "none", border: "none", cursor: monthOffset < 0 ? "pointer" : "default", fontSize: "1.1rem", color: "var(--ink)", opacity: monthOffset < 0 ? 0.6 : 0.2 }}>›</button>
                 </div>
               </div>
-              <div className="reco-item">
-                <span className="reco-icon">📖</span>
-                <div className="reco-text">
-                  <strong>Grammar: Preterite vs. Imperfect</strong>
-                  <span>Focus on storytelling scenarios to practice past tense naturally.</span>
-                </div>
+              <div className="card-sub">Practice sessions — {monthName}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", marginTop: "0.75rem", marginBottom: "4px" }}>
+                {["M","T","W","T","F","S","S"].map((d, i) => (
+                  <div key={i} style={{ textAlign: "center", fontSize: "0.65rem", color: "rgba(26,26,46,0.35)" }}>{d}</div>
+                ))}
               </div>
-              <div className="reco-item">
-                <span className="reco-icon">✈️</span>
-                <div className="reco-text">
-                  <strong>New scenario: Travel</strong>
-                  <span>You haven't tried Travel yet — great for expanding vocabulary.</span>
-                </div>
-              </div>
-              <div className="reco-item">
-                <span className="reco-icon">🔥</span>
-                <div className="reco-text">
-                  <strong>Keep your streak alive!</strong>
-                  <span>You're on a 5-day streak. Practice today to keep it going.</span>
-                </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px" }}>
+                {cells.map((day, i) => {
+                  if (!day) return <div key={i} />;
+                  const count = activeDays[day.toDateString()] || 0;
+                  const isToday = day.toDateString() === today.toDateString();
+                  const tip = count
+                    ? `${count} session${count !== 1 ? "s" : ""} · ${day.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                    : day.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                  return (
+                    <div
+                      key={i}
+                      className={`heat-cell ${heatLevel(count)}`}
+                      data-tip={tip}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", color: count ? "#fff" : "rgba(26,26,46,0.35)", fontWeight: 500, ...(isToday ? { outline: "2px solid var(--terracotta)", outlineOffset: "1px" } : {}) }}
+                    >
+                      {day.getDate()}
+                    </div>
+                  );
+                })}
               </div>
             </div>
+          );
+        })()}
+
+          {/* FILLER */}
+          <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "200px", color: "rgba(26,26,46,0.25)", fontSize: "0.85rem", fontStyle: "italic" }}>
+            Coming soon
           </div>
         </div>
 
