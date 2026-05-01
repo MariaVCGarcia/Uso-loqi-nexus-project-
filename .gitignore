@@ -43,3 +43,5 @@ backend/.env
 # project
 /css/styles.css.map
 .prepros
+
+node_modules/

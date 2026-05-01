@@ -83,25 +83,71 @@ def build_hint_prompt(message, scenario, level, messages):
 
     conversation = format_messages(messages)
 
+    last_ai = ""
+
+    for msg in reversed(messages):
+        if msg["role"] == "ai":
+            last_ai = msg["text"]
+            break
+
+
     return f"""
     you are a helpful Spanish tutor. 
 
-    You MUST base your answer on the conversation below.
+    You are helping the user reply to the MOST RECENT MESSAGE.
 
     Conversation:
     {conversation}
 
     USER MESSAGE: {message}
 
+    LAST AI MESSAGE: {last_ai}
+
     scenario: {scenario}
     level: {level}
 
 
-    DON'T:
-    -Ask questions
-    - Start a conversation
-    - Say things like "what do you want to say"
-    - Be conversational
+    HINT LEVELS: 
+    Beginner: 
+    - Very short responses
+    - 1 key idea per sentence
+    - No super complex grammar
+    - Keep Spanish simple
+
+    Intermediate:
+    - Medium length responses
+    - Can combine 2-3 ideas
+    - Natural but not complex grammar
+
+    ADVANCED:
+    - Natural fluent Spanish
+    - Can use connectors, idioms, detail
+
+
+
+    YOUR TASK:
+    IF USER MESSAGE IS BLANK:
+    1. Look at the LAST MESSAGE from the AI or conversation partner.
+    2. Help the student reply to THAT MESSAGE.
+    3. Give a valid Spanish response.
+    4. Give a short starter.
+
+    If USER MESSAGE has text:
+    1. Improve the student's intended response.
+    2. Translate meaning in English.
+    3. Give a starter.
+
+    
+
+
+    RULES: 
+    - Starter should help continue the conversation
+    - DON'T repeat old sentences 
+    - If the student's text is incomplete or broken, improve it.
+    - If the student leaves text blank, help them reply to the LAST MESSAGE.
+    - Be CONCISE
+    - If blank, create reply 
+
 
     Student input maybe incomplete or empty
 
@@ -109,9 +155,10 @@ def build_hint_prompt(message, scenario, level, messages):
 
     OUTPUT ONLY: 
     
-    English: what they want to say
+    Meaning: English meaning of last AI message
+    English: English version of the user's possible response
     Spanish: Spanish version
-    Starter: Sentence starter
+    Starter: First few words to begin response
 
     Keep it useful
 
@@ -163,10 +210,10 @@ def hint(req: HintRequest):
                     "role": "system",
                     "content": prompt
                 },
-                {
-                    "role": "user",
-                    "content": req.message
-                }
+                # {
+                #     "role": "user",
+                #     "content": req.message
+                # }
             ]
         )
 
